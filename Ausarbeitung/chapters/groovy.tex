@@ -1,0 +1,245 @@
+% !TeX spellcheck = de_DE
+
+\section{Groovy}
+\label{ch-groovy}
+
+Groovy-Buch \cite{groovy-in-action}
+
+Groovy ist eine für die Java Plattform entwickelte Programmiersprache, die durch simple und eingängige Syntax als sehr leicht zu erlernen gilt.
+Durch die Verbindung von  optionaler Typisierung und dynamischen Aspekten gilt diese Programmiersprache als sehr umfangreich und mächtig. Die Einbindung in Java funktioniert reibungslos, da beide Sprachen kompatiblen Bytecode generieren. Groovy kann nicht nur objektorientiert sein, sondern bietet auch Möglichkeiten, den Code direkt als Skript auszuführen. Außerdem wird Unterstützung für die einfache Entwicklung von domänenspezifischen Sprachen für problemspezifische Anwendungen geboten. Einer der wichtigsten Aspekte der Sprache ist die Runtime und Compiletime Metaprogrammierung, die den größten Umfang dieser Arbeit einnimmt. 
+Groovy unterstützt sowohl statische Typisierung (Festlegung der Datentypen von Variablen während der Kompilierung) als auch statische Kompilierung (externe Bibliotheken sind in der Executable gelinkt und werden nicht zur Laufzeit geladen). 
+
+Das Groovy Projekt wurde 2003 von James Strachan ins Leben gerufen und wird seither kontinuierlich weiterentwickelt.
+Die Motivation zur Entwicklung von Groovy nahm Strachan aus seiner Überzeugung für Python. Dabei sollte die Sprache eine ähnliche Syntax zu Java behalten, jedoch komplexe Strukturen vereinfachen und zusammenfassen. Dies drückt sich vor allem durch den leichten Umgang mit Datentypen bzw. Strukturen aus. Groovy nimmt dem Programmierer durch zusätzliche Abstraktionen und Hintergrundprozesse viel Arbeit ab. Mittlerweile wird die Sprache durch Entwicklungsumgebungen entweder nativ oder durch zusätzliche Erweiterungen gut unterstützt. Bekannte Frameworks, die Groovy unterstützen sind z.B. Spring oder Grails.
+
+\subsection{Grundlagen}
+Groovy bietet die Möglichkeit zur optionalen Typisierung von Variablen. Dies wird nach dem sog. „Duck-Typing“ Prinzip realisiert. Ein Objekt wird dabei nicht durch seine Klasse beschrieben, sondern durch das Vorhandensein bestimmter Eigenschaften. Ein bekanntes Zitat dazu lautet: \textit{\enquote{If it walks like a duck and it quacks like a duck, then it must be a duck“}}. Wenn sich also ein Objekt analog zu einem anderen verhält und dieselben Methoden und Attribute aufweist, muss es sich um eine Instanz jenes Objekts handeln. Dadurch erreicht man eine höhere Flexibilität, jedoch ist die Fehlerermittlung zur Übersetzungszeit stark eingeschränkt.
+Weiterhin ist die Fehlerermittlung schwierig, da sämtliche Überprüfung auf Typinkonsistenzen durch den dynamischen Charakter seitens Groovy wegfallen.
+Teilweise können in dieser Situation Verwirrungen oder Probleme entstehen, wenn dynamisch generierte Objekte eine plötzliche Verhaltensänderung aufweisen. 
+
+Generell ist es schwierig von Groovy als Erweiterung zu Java zu sprechen, da Groovy Code innerhalb der JVM läuft nach dem \textit{\enquote{My class is your class}}-Prinzip. Man spricht eher als eine Erweiterung zu Java auf der Ebene des Quellcodes. Der generierte Bytecode bleibt weiterhin kompatibel zu beiden Sprachen.
+
+Wichtig hervorzuheben sind Closures. Closures sind unabhängige Code-Schnipsel, die unter anderem Variablen zugeordnet und Methoden als Argument übergeben werden können.  Closures sind ähnlich zu den in Java 8 eingeführten Lambda-Ausdrücken mit zusätzlichen Vorteilen wie z.B. dem Zugriff auf sämtliche Variablen des übergeordneten Kontexts.
+Eine weitere Besonderheit von Groovy ist der dynamische Aspekt. Durch Verwenden von Metaklassen wird dieses Verhalten realisiert.
+Metaklassen in Groovy sind eine Art Blaupause einer Klasse und definieren im Zusammenspiel mit dem Meta-Objekt-Protokol (MOP) das Verhalten jedes Groovy- oder Java-Objekts in Groovy.
+
+Neben der klassischen Vorgehensweise kann Groovy, analog zu Pyhton,  auch als Skriptsprache verwendet werden. Dies vereinfacht das Lösen von einfachen Aufgaben ohne Aufblähen des Quellcodes durch Standardimplementierungen.
+Neue Funktionalitäten in der Groovy Syntax bieten:
+
+\begin{itemize} [nosep]
+	\item Einfacherer Zugriff auf Java-Objekte durch neue Expressions und Operatoren
+	\item Neue Kontrollstrukturen wie z.B. range, range in switches, etc.
+	\item Annotationen: Automatische und versteckte Generierung von Code (AST Transformationen)
+	\item Neue Datentypen: \texttt{GroovyString} oder \texttt{GString}, Ranges
+	\item Zusätzliche Klammern \enquote{()} erlaubt Interpretation als Ausdruck
+\end{itemize}
+
+
+\begin{figure} [hbt]
+\begin{lstlisting}[language = Java , firstnumber = 1 , escapeinside={(*@}{@*)}]
+Buy(best).of(stocks)  // Java und in Groovy
+Buy best of stocks;   // Groovy
+\end{lstlisting}
+
+\caption{Groovy-Java-Syntaxvergleich}
+\label{fig-groovy-java}
+\end{figure}
+
+
+Weiterhin ist es in Groovy möglich die Syntax lesbarer zu gestalten.
+Die beiden, in Abbildung \ref{fig-groovy-java} aufgelisteten Zeilen weisen die gleiche Semantik auf.
+Bei der Syntax für das Groovy Beispiel ist zu erkennen, dass unter bestimmten Bedingungen Punkte und Klammern bei Methodenaufrufen wegfallen können. Das Resultat ist eine Code Struktur, welche der natürlichen Sprache sehr nahe kommt, allerdings für klassische Entwickler gewöhnungsbedürftig ist. Dabei muss eine vollständige Disambiguierung der Syntax möglich sein.
+
+Leichtere Zugänglichkeit wird durch automatische Einbindung von verschiedenen Paketen gewährleistet.
+Auch das Erstellen der JavaBean-Äquivalenten in Groovy (GroovyBeans genannt) wird durch Sprachbesonderheiten, wie die automatische Generierung der Zugriffsmethoden (Getter und Setter), stark vereinfacht.
+Einschränkungen auf Arrays sind nicht mehr vorhanden, sodass Elemente außerhalb der Grenzen zuweisbar sind. Auch auf negative Indizes kann zugegriffen werden. Z.B. beschreibt Array[-1] den letzten Eintrag in einem Array.
+
+
+\subsubsection{Datentypen}
+In Groovy ist alles ein Objekt. Im Gegensatz zu Java schließt dies auch Primitive ein. Diese Objekte werden GroovyObject genannt. Datentypen wie \texttt{int} und \texttt{float} können wie in Java als Primitive deklariert werden. 
+Durch Autoboxing werden im Hintergrund jedoch Wrapper-Objekte erstellt, die primitive Datentypen umschließen.
+Alle Operatoren in Groovy sind Methodenaufrufe. Standardoperatoren (+ - * /) sind hiervon nicht ausgeschlossen und können erweitert oder überschrieben werden. Auch das Casting von Objekten erfolgt durch \texttt{Coercion} implizit. Dabei wird immer der generischste Typ zurückgeliefert, wodurch das Aufblähen des Codes verringert wird.
+
+
+\subsubsection{String-Manipulation}
+Groovy unterstützt eine Vielzahl von Strings.
+Neben den normalen in Java verwendeten Strings existieren zusätzlich GStrings, Strings, die charakteristisch von drei Anführungszeichen umgeben sind, sowie Slash-Strings. Jede der drei Arten hat seine Existenzberechtigung:
+
+\begin{itemize}
+	\item \textbf{Gstring:}
+	GStrings sind eine Erweiterung der Java Strings, die unter anderem mit Platzhaltern für Variablen versehen werden können.
+	\item \textbf{Triple Quoted Strings:}
+	Diese Art von Strings ist bereits in vielen Programmiersprachen vorhanden und erlauben es auf einfache Art und Weise mehrzeilige Zeichenketten zu erstellen
+	\item \textbf{Slash Strings:}
+	Diese eignen sich besonders gut für reguläre Ausdrücke, da hier die rückwärtigen Schrägstriche nicht zusätzlich maskiert werden müssen.
+\end{itemize}
+
+
+\subsubsection{Collections}
+In Groovy erhalten Collections Zusatzfunktionen, die das Verarbeiten von Datenbeständen erleichtert.
+Hierzu gehören unter anderem Funktionen wie \texttt{collect}, über die Collections mit einem Filter versehen werden können.
+Die Funktion \texttt{sort} ermöglicht es, Daten nach Belieben zu sortieren. Der Klassiker \texttt{foreach} erlaubt es, einfache Operationen auf jedes Element eines Datenbestandes durchzuführen. 
+Ranges wiederum erlauben die Operationen auf ein bestimmtes Intervall zu beschränken.
+
+
+\subsection{Closures}
+Closures gelten als eines der wichtigsten Merkmale der Groovy Sprache. Sie sind spezielle Objekte, die als Parameter mit anderen Routinen verwendet werden können. In üblichen objektorientierten Programmiersprachen haben Objekte ein Verhalten und bestimmte Eigenschaften. Closures geben nur ein durch Code beschriebenes Verhalten an. Eigenschaften oder Daten sind hierbei nicht von Interesse. Ein Closure kann keinen global persistenten Zustand besitzen, es ist daher nicht möglich, deren Instanzen wiederzuverwenden.
+Es kann jedoch Argumente annehmen und Daten zurückgeben.
+Nützlich werden sie beispielsweise bei Aneinanderreihung von Operationen auf Collections.
+Filter können bspw. über diese Objekte definiert werden.
+
+Der Kontext auf dem ein Closure erstellt wurde, bleibt erhalten und verfällt, wenn die Ausführung abgeschlossen wurde. 
+Die Referenzauflösung innerhalb geschieht über ein \textbf{delegate} Objekt, welches typischerweise auf den darüber liegenden Kontext verweist.
+Erstellte Variablen werden als Referenz innerhalb gespeichert.
+
+Ein besonderes Merkmal von Closures ist, dass diese als Argument für Methoden verwendet werden können. 
+Dadurch kann spezielles Verhalten der Methoden erreicht werden.
+Weiterhin können Closures als Variablen verwendet werden oder die Funktionalität von bereits vorhandenen Methoden annehmen. 
+Auf Typisierung von Rückgabetyp und Parametern kann auch hier verzichtet werden.
+Da Closures zur Laufzeit ausgewertet werden, gilt dies auch für typisierte Parameter. 
+Der Groovy Compiler kann deshalb bei der Übersetzung nicht entscheiden, ob ein Parameter korrekt typisiert wurde.
+In Verbindung mit \textbf{Currying} können Closures verknüpft werden. 
+Außerdem ist für sie der Shift-Operator \enquote{\textbf{\texttt{<<}} und \textbf{\texttt{>>}}} definiert.
+
+%TODO (Beispiel) + currying erklären?
+
+Closures sind keine mathematischen Funktionen, deshalb kann bei einer Berechnung mit denselben Parametern unter Umständen ein abweichendes Ergebnis erzielt werden. 
+Bei rekursiven Funktionen können Rückgabewerte mit der Funktion \textbf{memoize} im Cache gespeichert werden. 
+Ein klassisches Beispiel ist die Berechnung der Fibunacci Zahlen, die durch Benutzung von memoize deutlich an Performance gewinnt.
+
+
+\subsection{Objektorientierte Programmiersprache}
+Grundsätzlich verhalten sich Java und Groovy bei der Objektorientierung sehr ähnlich. 
+Groovy Klassen können Java Klassen und Schnittstellen erweitern und umgekehrt.
+Eine Besonderheit bei Groovy ist jedoch in der Vererbung zu beobachten.
+Java achtet bei der Vererbung nur auf die statischen Typen der Parameter. 
+Groovy hingegen betrachtet die Parameter von Methodenaufrufen dynamisch zur Laufzeit. 
+In folgendem Beispiel wird dies klarer:
+
+
+\begin{figure}[hbt!]
+\begin{lstlisting}[language = Java, firstnumber = 1 , escapeinside={(*@}{@*)}]
+class Main {
+	public static void main(String[] argv) {
+		Object x = 1;
+		Object y = "foo";
+		
+		assert multi(x).equals("Runtime param type: object");
+		assert multi(y).equals("Runtime param type: object");
+	}
+	
+	public static String multi(String s) {
+		return "Runtime param type: string";
+	}
+	
+	public static String multi(Object o) {
+		return "Runtime param type: object";
+	}
+}
+\end{lstlisting}
+
+\caption{Java Laufzeitbeispiel}
+\label{code:java-runtime}
+\end{figure}
+
+
+Erkennbar ist in diesem Ausschnitt, dass Java bei Methodenaufrufen nur die statischen Parametertypen zum Kompilierungszeitpunkt verwendet.
+Bei Groovy passiert die Auswertung der Parametertypen erst zur Laufzeit, womit sich aus der in Abbildung \ref{code:groovy-runtime} skizzierten Situation unterschiedliche Verhaltensweisen ergeben.
+
+
+\begin{figure}[hbt!]
+\begin{lstlisting}[language = Java , firstnumber = 1 , escapeinside={(*@}{@*)}]
+def multi(String s) { return "Runtime param type: string" }
+def multi(Object o) { return "Runtime param type: object" }
+
+Object x = 1
+Object y = "foo"
+
+assert multi(x) == "Runtime param type: object"
+assert multi(y) == "Runtime param type: string"
+\end{lstlisting}
+
+\caption{Groovy Laufzeitbeispiel}
+\label{code:groovy-runtime}
+\end{figure}
+
+
+Beiden Parametern (\texttt{x} und \texttt{y}) wird zum Kompilierungszeitpunkt der gleiche Typ (Object) zugewiesen.
+Groovy's dynamisches Laufzeitverhalten evaluiert, dass der Parameter \texttt{y} zur Laufzeit dem Typen \texttt{String} zugehörig ist.
+Dementsprechend wird beim zweiten Methodenaufruf in Zeile 8 die erste Signatur verwendet.
+In Java hingegen würde für beide Variablen der Typ Object zugeordnet.
+Dieses Verhalten ist bei Java ausgeschlossen.
+Dadurch verhält sich das Groovy-Programm vom Java-Äquivalent leicht verschieden.
+Diese Verhalten von Groovy ist eine potenzielle Fehlerquelle für Groovy-Einsteiger, die das Verhalten von Java gewohnt sind.
+
+
+\subsubsection{Traits}
+Ein weiteres Feature sind Traits. Traits sind eine Sammlung von Funktionen, die eine Art Verhaltenseigenschaft darstellen sollen.
+Klassen können diese Verhaltenseigenschaften übernehmen, wodurch diese sämtliche Funktionen des Traits erhalten. 
+Wiederum können Traits, andere Traits implementieren, daraus kann man aus vielen kleinen Artefakten, mächtige Schnittstellen aufbauen.
+
+
+
+\subsection{Meta-Object-Protocol (MOP)}
+Die Möglichkeit für dynamische Programmierung wird in Groovy durch das \textit{Meta Object Protocol} (MOP) bereitgestellt. 
+Die Funktionsweise des MOP lässt sich wie folgt veranschaulichen. Jede Klasse besitzt eine zugehörige Metaklasse, die jeden Methodenaufruf abfängt. 
+Sie agiert als Vermittler und ist dafür zuständig, zu entscheiden, ob und wohin Methodenaufrufe weitergeleitet werden sollen. 
+In diesen Metaklassen ist zunächst das Standardverhalten von Methodenaufrufen definiert. 
+Eine Besonderheit für Entwickler stellt die Möglichkeit dar, das Verhalten des Vermittlers zu verändern oder gar gänzlich zu substituieren. 
+Um das Verhalten steuern zu können, stellt die Metaklasse sogenannte Hook-Methoden zur Verfügung. 
+Diese verwenden oftmals Closures, um ihr Verhalten zu definieren. 
+Diese Closures können vom Entwickler neu definiert werden, was z.B. zur Laufzeit die Möglichkeit bietet neue Funktionalität zu vorhandenen Methoden hinzuzufügen.
+
+Ein Beispiel für eine solche Hook-Methode ist \texttt{methdoMissing()}. Wenn z.B. eine nicht existierende Methode einer Klasse aufgerufen wird, ruft deren Metaklasse stattdessen die Methode \texttt{methodMissing()} auf.
+Angenommen das Standardverhalten dieser Methode betrachtet ein Entwickler für die Situation als unangemessen, so kann das Verhalten dieser Hook-Methode mithilfe eines Closures ausgetauscht werden. 
+Dabei ist zu festzustellen, dass das zugehörige Objekt dabei nicht verändert wird. 
+Es wird lediglich das Verhalten durch den Aufruf in der Metaklasse verändert. 
+Soll zusätzliches Verhalten eines Objekts gewährleistet werden, kann ein Closure den Aufruf in das ursprüngliche Objekt weiterleiten.
+Für jede Klasse im \texttt{ClassLoader} hält Groovy eine Metaklasse bereit. Auch Top-Level Funktionen wie \texttt{invokeMethod()} können überschrieben werden.
+Anwendungsgebiete hierfür sind:
+
+\begin{itemize}[nosep]
+	\item Generierung von DSLs (Domain Specific Languages)
+	\item Implementierung von Buildern
+	\item Erweitertes Logging, Tracing, Debugging und Profiling
+	\item Automatisiertes Testen
+\end{itemize}
+
+Ein wichtiger Punkt zur Dynamisierung ist folgender, dass die Metaklassen sogar ganz ausgetauscht werden können.
+Alle Groovy Objekte implementieren die Methoden \texttt{getMetaClass()} und \texttt{setMetaClass()}. 
+Die Standardimplementierung befindet sich in der \textit{MetaClassRegistry}. 
+Objekte, die nicht von GroovyObject erben, werden direkt über die \textit{MetaClassRegistry} aufgerufen, können also ohne weiteres nicht verändert werden. 
+
+Es gibt drei Arten von Metaklassen. \texttt{MetaClassImpl} sind die Standard-Metaklassen.
+Über die \texttt{ExpandoMetaClass} können Zustände erweitert bzw. expandiert werden. 
+Durch ein drittes Konstrukt der \texttt{ProxyMetaClass} können vorhandene Metaklassen dekoriert werden. 
+Dabei wird ein Wrapper verwendet, welcher die Methodenaufrufe entsprechend weiterleitet.
+
+%Der dynamisch generierte Code ist nur für Objekte, die nach der Veränderung der Metaklasse erstellt wurden. 
+%Auswirkungen betreffen Objekte, die vorher erstellt wurden nicht.
+%TODO: Überprüfen of die andrungen rückwirkend sind (Car fahren ...)
+%Expandometaclass enable globally ?
+
+
+\subsection{AST Transformationen und Annotationen}
+%TODO hier evtl ein bisschen erweitern
+
+\begin{figure}[hbt]
+	\centering
+	\includesvg[width =\textwidth]{diagrams/GroovyPhases.svg}
+	\caption{Vorgänge zur Kompilierung und Ausführung von Groovy \cite{groovy-in-action}}
+	\label{fig:groovy-compile-steps}
+\end{figure}
+
+Ein \textit{Abstract Syntax Tree} (AST) stellt ein Programm im Zuge des Compilevorgangs als Baumstruktur dar. 
+Die Kompilierung von Code benötigt mehrere Schritte die in Abbildung \ref{fig:groovy-compile-steps}. 
+Der AST wird noch vor der ByteCode-Generierung erzeugt und lässt sich leicht in der GroovyConsole visualisieren. 
+In der GroovyConsole können die verschiedene Phasen des Kompiliervorgangs ausgewählt werden. 
+%Ohne weitere Einzeilheiten zu nennen wird diese idealerweise auf \textit{Canonicalization} konfiguriert, da zu diesem Zeitpunkt alle Transformationen durchgeführt wurden. 
+%Unübersichtliche Zusatzinformationen für den Compiler werden in einer der folgenden Phase hinzugefügt.
+
+Mithilfe von AST-Transformationen kann zum Zeitpunkt der Kompilierung zusätzliche Funktionalität dem ByteCode beigefügt werden.
+Es existieren zwei Arten von Transformationen. \texttt{Lokale Transformationen} Kennzeichnen sich durch das Hinzufügen einer Annotation im Quelltext, welche Bytecode an einer bestimmten Stelle des Programms generiert. \textit{Globale Transformationen} wiederum benötigen keine Annotationen.
+Um diese Transformationen verwenden zu können müssen diese zunächst dem \textit{Classpath} beigefügt werden.
+
+Groovy stellt von Haus aus eine Menge von Annotationen bereit, mit der Entwickler eine Vielzahl von Standard-Aufgaben einfacher bewältigen können. Weiterhin vereinfacht Groovy das Erstellen von eigenen Transformationen, sowohl lokal als auch global durch das Bereitstellen der AstBuilder Klasse.

@@ -1,0 +1,21 @@
+
+---  Creating Artist: Picasso  ---
+
+Pablo Picasso create a new painting.
+Pablo Picasso create a new Sculpture.
+The PAINTING named Guernica was created by Pablo Picasso in 1937.
+The SCULPTURE named Bull's Head was created by Pablo Picasso in 1942, it has an height of 45cm.
+
+---  Expanding jmaster.artwork.Painting class  ---
+
+The PAINTING named Guernica was created by Pablo Picasso in 1937.
+The SCULPTURE named Bull's Head was created by Pablo Picasso in 1942, it has an height of 45cm.
+
+---  Creating Artist: Da Vinci  ---
+
+Leonardo da Vinci create a new painting.
+Leonardo da Vinci create a new Sculpture.
+Leonardo da Vinci create a new painting.
+The PAINTING named Mona Lisa was created by Leonardo da Vinci in 1505.
+The SCULPTURE named The Virgin and the Laughing Child was created by Leonardo da Vinci in 1472, it has an height of 50cm.
+The PAINTING named The Last Supper was created by Leonardo da Vinci in 1498.

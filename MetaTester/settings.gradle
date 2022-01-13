@@ -1,0 +1,4 @@
+rootProject.name = 'MetaTester'
+include 'GroovyMaster'
+include 'JavaMaster'
+

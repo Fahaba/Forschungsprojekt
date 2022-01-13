@@ -1,0 +1,50 @@
+% !TeX spellcheck = de_DE
+
+\section{Ausblick}
+\label{ch-outlook}
+
+An diesem Punkt kommen die Untersuchungen Richtung Gradle und JPMS zu einem Schluss.
+Der Themenbereich über das Zusammenspiel von Groovy mit Gradle lässt annehmen, dass nicht in allen Situationen die Metaprogrammierung durchgeführt werden kann.
+Grund der Annahme ist die teilweise erfolglose Durchführung der Metaprogrammierung in den Testprojekten.
+% TODO: etwas fehlt ...
+Groovy kann also nicht wie es zu untersuchen galt, Gradle so manipulieren, dass zusätzliche Informationen über interne Prozesse von Gradle sichtbar werden.
+Nun stellt sich an der Stelle die Frage, welche Möglichkeiten sich generell mit einem Testprojekt, wie in Kapitel \ref{ch-generator} verwendet, ergeben.
+Grundsätzlich können aus der Groovy-Perspektive Metaklassen von auch bereits erstellten Instanzen manipuliert werden. 
+In der Testdurchführung funktionierte dies im Java-Kontext nur mit direkt erstellten Klassen. 
+Eine AST-Transformation war mit der Verwendung von Java-Klassen nötig, um das gewünschte Verhalten zu gewährleisten.
+% TODO: nochmal überprüfen
+
+Durch die Metaprogrammierung für Groovy Projekte bzw. AST-Transformationen für Java wäre es theoretisch möglich einen Debugger für die entsprechende Programmiersprache zu entwickeln.
+Dies bietet sich deshalb an, da keine direkten Änderungen im Quellcode vorgenommen werden. 
+Die Änderungen bleiben im Hintergrund und wirken sich zunächst nur auf die Performance des Programms aus.
+Die Betrachtung der Erstellung eines Groovy Debuggers ist im Kontext dieser Arbeit jedoch wesentlich interessanter.
+Die Dynamik könnte über mehrere Ebenen funktionieren. 
+Bestimmte Hooks für Nutzereingaben könnten es sogar ermöglichen, in das laufende Programm zusätzlichen Quellcode \enquote{einzuschleusen}, welcher von Groovy direkt verarbeitet werden könnte.
+Das Standardverhalten könnte vorgeben, dass Namen von Klassen, Methoden und Feldern ausgegeben werden.
+Diese könnten wiederum als Haltepunkte während des laufenden Programms definiert werden.
+Zu dieser Idee ist anzumerken, dass Debugger grundsätzlich dazu verwendet werden, um dem Entwickler die Möglichkeit zu bieten, den vorliegenden Quellcode zu untersuchen.
+Hier wird vorgesehen, dass der Benutzer des fiktionalen Debuggers den Quellcode eines Programms nicht kennt.
+Durch das Einschleusen von zusätzlichem Code könnte ein bereits erstelltes Programm erweitert werden. 
+Allerdings können auch Schwachstellen in Programmen dadurch sichtbar werden.
+Die Verwendung von Groovy Programmen für Livesysteme mit sensiblen Daten könnte also unter Umständen kritisch sein.
+
+Groovy bietet generell viele einfache Wege, sonst komplexere Dinge zu tun. 
+Neue Entwickler finden wahrscheinlich einen leichten Zugang zu einer solchen Programmiersprache, ohne die volle Bandbreite an Möglichkeiten auszuschöpfen.
+Entwickler, die sich mit Groovy vertraut gemacht haben, könnten anfänglich auf Probleme treffen, wenn diese auf andere Sprachen treffen, die beispielsweise voll typisiert sind.
+Möglicherweise wird bei der erfolgreichen Erstellung von Programmen in einer anderen Sprache, ein anderes Verhalten erwartet als von Groovy gewohnt.
+
+Das JPMS System wurde über das Generator-Projekt in einer ausreichenden Größe getestet und an seine Grenzen gebracht. 
+Sollte es zu einer Projektgröße in solch unrealistischen Ausmaßen kommen, kann die Verwendung von Gradle für den Erstellungsvorgang zum Flaschenhals werden (wie Abb. \ref{fig:compile-memory} zeigt).
+
+Die JPMS Module wurden in einer hohen Anzahl erstellt, jedoch blieb der enthaltene Code relativ simpel.
+Eine Testreihe mit komplexerer Logik der einzelnen Module könnte an der Stelle durchgeführt werden, um etwaige noch nicht aufgefundene Performance Schwachstellen zu finden.
+
+Was das ursprüngliche Ziel dieser Arbeit - Gradle zusätzliche Informationen zu entlocken - betrifft, jedoch als abwegige Idee betrachtet, wäre folgende Idee:
+Das Open Source Projekt \enquote{Gradle} müsste mit dem Groovy Compiler erstellt werden, um einen weiteren Versuch einer Anwendung der Metaprogrammierung innerhalb eines Gradle Skripts zu unternehmen.
+Diese Situation ist bereits durch das Kapitel \ref{ch-analyse} bekannt. 
+Das über den Groovy Compiler erstellte \enquote{Groovy-Gradle}-Projekt müsste nach den gewonnenen Erkenntnissen dann die Möglichkeit bieten Metaklassen zu manipulieren.
+
+Groovy und Gradle bieten noch viel \enquote{Angriffsfläche} für die Forschung. 
+Einige bemerkenswerte Besonderheiten wurden in dieser Arbeit bereits herausgestellt.
+Bedauerlicherweise konnte aus Gradle keine zusätzliche Information generiert werden. 
+Allerdings sind neue Ideen für weitere Arbeiten dieser Art entstanden an denen evtl. andere Forscher anknüpfen können.

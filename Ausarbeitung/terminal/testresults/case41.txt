@@ -1,0 +1,41 @@
+
+---  Creating Artist: Picasso  ---
+
+Pablo Picasso created a new Painting.
+Pablo Picasso created a new Sculpture.
+The PAINTING named Guernica was created by Pablo Picasso in 1937
+The SCULPTURE named Bull's Head was created by Pablo Picasso in 1942, it has an height of 45cm.
+
+---  Expanding gmaster.GroovyMaster class  ---
+
+The PAINTING named Guernica was created by Pablo Picasso in 1937
+The SCULPTURE named Bull's Head was created by Pablo Picasso in 1942, it has an height of 45cm.
+---  EXPA  STCAL: greetings -> []
+---  EXPA  STRES: Greetings form the Groovy Arts Association!
+
+---  Creating Artist: Da Vinci  ---
+
+---  EXPA    CAL: createPainting -> [Mona Lisa, 1505]
+Leonardo da Vinci created a new Painting.
+---  EXPA    RES: createPainting <- true
+---  EXPA    CAL: createSculpture -> [The Virgin and the Laughing Child, 1472, 50]
+Leonardo da Vinci created a new Sculpture.
+---  EXPA    RES: createSculpture <- true
+---  EXPA    CAL: createPainting -> [The Last Supper, 1498]
+Leonardo da Vinci created a new Painting.
+---  EXPA    RES: createPainting <- true
+---  EXPA    CAL: printArt -> []
+---  EXPA    CAL: println -> [The PAINTING named Mona Lisa was created by Leonardo da Vinci in 1505]
+The PAINTING named Mona Lisa was created by Leonardo da Vinci in 1505
+---  EXPA    RES: println <- null
+---  EXPA    CAL: println -> [The SCULPTURE named The Virgin and the Laughing Child was created by Leonardo da Vinci in 1472, it has an height of 50cm.]
+The SCULPTURE named The Virgin and the Laughing Child was created by Leonardo da Vinci in 1472, it has an height of 50cm.
+---  EXPA    RES: println <- null
+---  EXPA    CAL: println -> [The PAINTING named The Last Supper was created by Leonardo da Vinci in 1498]
+The PAINTING named The Last Supper was created by Leonardo da Vinci in 1498
+---  EXPA    RES: println <- null
+---  EXPA    RES: printArt <- [gmaster.artwork.Painting@34f6515b, gmaster.artwork.Sculpture@4b34fff9, gmaster.artwork.Painting@1187c9e8]
+---  EXPA    CAL: getClass -> []
+---  EXPA    RES: getClass <- class gmaster.GroovyMaster
+---  EXPA  STCAL: greetings -> []
+---  EXPA  STRES: Greetings form the Groovy Arts Association!

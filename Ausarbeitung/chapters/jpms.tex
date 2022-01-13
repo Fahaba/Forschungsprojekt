@@ -1,0 +1,253 @@
+% !TeX spellcheck = de_DE
+
+\section{JPMS}
+\label{ch-jpms}
+
+Das folgende Kapitel thematisiert die groben Eigenschaften und Nutzen des \textit{Java Module Platform Systems} (kurz \textit{JPMS}), eingeführt in Java Version 9. 
+Das JPMS gilt als eine bzw. \underline{die} zentrale Komponente des \textit{Project Jigsaw} - einen Ansatz die JDK und andere große Code Quellen zu modularisieren. 
+Folgende Ziele sollte durch das Project Jigsaw erreicht werden \cite{project-jigsaw}:
+
+\begin{itemize} [noitemsep]
+	\item Effektive Zeiteinsparung des Entwicklers bei der Erstellung von größeren Anwendungen und Bibliotheken.
+	\item Steigerung von Sicherheit und Wartbarkeit der Java Plattform.
+	\item Verbesserung von Anwendungsperformance
+	\item Skalierbarkeit von JDK und SE Plattformen, z.B. für den Einsatz in kleineren/embedded Geräten.
+\end{itemize}
+
+Diese Ziele wurden größtenteils mit der Einführung des neuen Modulsystems und zwei daraus resultierenden Fähigkeiten in die Java-Welt erfolgreich umgesetzt.
+Die neuen Fähigkeiten sind \cite{jpms-spec}:
+
+\begin{itemize}
+	\item \textit{Reliable Configuration} (zuverlässige Konfiguration), welches den Standard Classpath Mechanismus ersetzen soll, der unter anderem für die sogenannte \textit{Jar Hell} verantwortlich ist (als Jar Hell werden Probleme, die durch den Classpath Lademechanismus von Java entstehen, bezeichnet). 
+	Bei der zuverlässigen Konfiguration müssen sämtliche Abhängigkeiten explizit angegeben werden.
+	\item \textit{Strong Encapsulation} (starke Verkapselung) ist die Fähigkeit detailliert zu definieren, auf welche öffentlichen Ressourcen einer Anwendung, externe Komponenten Zugriff erhalten und auf welche nicht.
+\end{itemize}
+
+\subsection{Warum Module?}
+Welchen Zweck haben diese JPMS Module? Module sind optional. 
+Software kann weiterhin im klassischen Stil entwickelt und gewartet werden. 
+Java bleibt Java, jedoch bringt die Entwicklung modularer Anwendungen die oben genannten Vorteile mit sich, welche eine Umstellung attraktiv machen.
+Im Folgenden werden diese Vorteile genauer beschrieben.
+
+Der offensichtlich wichtigste Vorteil durch die Verwendung des Modulsystems ist die Realisierung einer echte Verkapselung zwischen den einzelnen Modulen.
+In konventionellen Java-Anwendungen gibt es keine Möglichkeit, den Zugriff einer Komponente auf Ressourcen einer anderen Kompetente vollständig zu verhindern oder einzuschränken. 
+Im Modulsystem hingegen kann für jedes Modul genau festgelegt werden, welche externe Instanzen auf interne Ressourcen eines Moduls zugreifen dürfen.
+Diese Zugriffskontrolle ermöglicht eine erhöhte Sicherheit und dürfte somit einige potenzielle Sicherheitslücken schließen. 
+Besonders betroffen sind dabei solche, die durch unerlaubten Zugriff auf Ressourcen, die eigentlich geschützt sein sollten, Zustande kommen.
+
+Ein weiterer Vorteil ist der potenzielle Performance-Gewinn.
+Da im Voraus eine Übersicht über die für eine Anwendung benötigten Abhängigkeiten definiert ist, kann die JVM zusätzliche Optimierung durchführen, welche ohne eine solche Übersicht nicht realisierbar wären. 
+Solche Optimierungen können einen positiven Effekt auf die Beschleunigung von Anwendungen haben.
+
+Ähnlich zum oben genannten Punkt können vorhandene Anwendungen komprimiert werden, da die API ebenfalls als Teil von Project Jigsaw komplett modularisiert wurde. 
+Vor Java 9 war die API lediglich in einzelne Pakete aufgeteilt. 
+Durch die Modularisierung der API und der Übersicht über die Modulabhängigkeiten werden nur API Module, welche letztendlich für die Anwendung benötigt werden, in die Endsoftware eingebunden. 
+Sonstige Module entfallen, wodurch die Anwendungen kleiner werden.
+
+Zusätzlich werden die Anwendungsstrukturen übersichtlicher und die Anwendungen an sich leichter skalierbar als in früheren Java Versionen. 
+Ein gutes Beispiel hierfür ist die Java API selbst. 
+Vor Java 9 war die API eine Monolith-ähnliche Struktur.
+Beim Hinzufügen von zusätzlicher Funktionalität galt es, die strengen und teilweise verschachtelten Abhängigkeiten zu beachten, um eine reibungslose Funktionalität zu gewährleisten. 
+Durch die Modalisierung wird die Erweiterung der API stark vereinfacht, da im Zuge dessen lediglich ein neues Modul erstellt wird, das im optimalen Fall von anderen Modulen unabhängig bleibt.
+Ebenfalls kann die API z.B. im Bereich von Embedded Systems verkleinert werden, indem Module, die nicht benötigt werden entfernt werden, um wertvolle Ressourcen einzusparen.
+
+
+\subsection{Module: Was ist ein Java Modul?}
+Zunächst wurden die Gründe und Vorteile der Modularisierung betrachtet. 
+Im Weiteren wird veranschaulicht, was unter einem JPMS-Modul zu verstehen ist und wie sich diese zu klassischen Java-Anwendungen unterscheiden. 
+Folgender Abschnitt geht näher auf die Einzelheiten eines Moduls ein. 
+Zusätzlich werden die verschiedenen Modultypen aufgelistet.
+
+\begin{mdframed}[style=mystyle, frametitle=Modul-Definition]
+	Ein Modul ist eine Zusammenfassung von eng verknüpften oder stark zusammenhängenden Java-Klassen, Paketen und Ressourcen, zusammen mit einer Deskriptor-Datei, die das Modul definiert bzw. beschreibt.
+	Innerhalb eines Moduls können Pakete, wie bisher verwendet werden, um Code zu organisieren.
+	Dies ist besonders wichtig, da Pakete das kleinste Granulat für die Zugriffsverwaltung auf die Modul-Ressourcen darstellt.
+\end{mdframed}
+
+\subsubsection{Modul-Typen}
+Im JPMS gibt es unterschiedlichen Modul-Typen, die hier kurz angerissen werden:
+
+\begin{itemize}
+	\item \textit{Plattform Module} (platform modules): Sämtliche Module, die Java SE Ressourcen/Pakete exportieren, werden als Plattform Module (Online auch oft als System Module) bezeichnet.
+	
+	\item \textit{Unnamed Modul} (unnamed module): Das Unnamed Modul ist ein spezielles Modul, das Rückwärtskompatibilität mit nicht modularisierter Software ermöglichen soll. 
+	Beim Versuch, Klassen oder JAR-Dateien zu laden, die sich nicht im Modulpfad befinden, wird zunächst im konventionellen Classpath gesucht. 
+	Falls die JAR-Dateien oder Klassen im Classpath geladen wurden, werden sie als Teil des Unnamed Moduls angesehen. 
+	Diese werden über das Unnamed Modul zugreifbar.
+	
+	\item \textit{Automatische Module} (automatic modules): Nicht modularisierte JAR-Dateien, welche im Modulpfad  hinterlegt sind, werden anhand der Namen automatisch Module für diese definiert. 
+	Dies ermöglicht es, nicht modularisierte JAR-Dateien wie Module zu verwenden. 
+	Sämtliche Ressourcen, von automatischen Modulen sind immer öffentlich zugreifbar.
+	
+	\item \textit{Anwendungsmodule} (application modules): Von Entwicklern definierte Standard-Module mit Deskriptor-Datei werden auch oft Anwendungsmodule genannt.
+\end{itemize}
+
+
+\subsection{Module: Syntax und Semantik}
+Im Anschluss zur Definition folgen Einzelheiten zur Syntax und Semantik von Modulen. 
+Zunächst wird die Modul-Deskriptor Datei genauer betrachtet. 
+
+\subsubsection{Modul-Desktiptor: \texttt{module-info.java}}
+Die Deskriptor-Datei \texttt{module-info.java} ist ein zentraler Bestandteil für die Erstellung von Modulen.
+In dieser Datei werden folgende Eigenschaften festgelegt:
+
+\begin{itemize}[noitemsep]
+	\item Name des Moduls.
+	\item Abhängigkeiten, welche das Modul besitzt.
+	\item Ressourcen-/Paketfreigaben.
+	\item Reflexionszugriffsrechte.
+	\item Dienste, die das Modul bereitstellt
+	\item Dienste, die das Modul verwendet.
+\end{itemize}
+
+Als Beispiel werden in Abbildung \ref{fig:mod1-info} und \ref{fig:mod2-info} zwei Modul-Deskriptor-Dateien angegeben, welche in den nachfolgenden Abschnitten genauer erläutert werden.
+
+
+\begin{figure}
+\begin{lstlisting}[language=java]
+module com.module1 {
+exports com.module1 to com.module0;
+exports com.module1.package1 to com.module2;
+
+requires com.module2;
+requires com.module3;
+
+opens com.module1 to com.module0;
+}
+\end{lstlisting}
+\caption{Modul1 module-info.java}
+\label{fig:mod1-info}
+\end{figure}
+
+
+\begin{figure}
+\begin{lstlisting}[language=java]
+module com.module1 {
+	exports com.module1 to com.module0;
+	exports com.module1.package1 to com.module2;
+	
+	requires com.module2;
+	requires com.module3;
+	
+	opens com.module1 to com.module0;
+}
+\end{lstlisting}
+\caption{Modul2 module-info.java}
+\label{fig:mod2-info}
+\end{figure}
+
+
+\subsubsection{Abhängigkeiten}
+
+Im JPMS werden Abhängigkeiten, die einem Modul zugehören mit dem Schlüsselwort \texttt{requires} angegeben. 
+Neben \texttt{requires} können zusätzliche Schlüsselwörter, \texttt{static} und \texttt{transitiv}, angegeben werden, die im passenden Kontext verwendet werden können bzw. sollten. 
+Es gibt drei Arten mit denen Abhängigkeiten angegeben werden:
+
+\begin{itemize}
+	\item \textbf{\texttt{requires}}: 
+	Die Standardmethode Abhängigkeiten zu deklarieren.
+	Mit \texttt{requires} festgelegte Abhängigkeiten, müssen sowohl zur Kompilierzeit als auch zur Laufzeit vorhanden sein.
+	
+	\item \textbf{\texttt{requires static}}: 
+	Bei statischen Abhängigkeiten handelt es sich um solche, die für Drittanwender eines Moduls optional sind.
+	Diese müssen zur Kompilierzeit des Moduls vorhanden sein. 
+	
+	Diese Art von Abhängigkeiten wird in Fällen verwendet, in denen ein Modul zusätzliche Funktionalitäten bereitstellt, falls eine bestimmte statische Bibliothek vorhanden ist. 
+	Es kann vorkommen, dass solche zusätzliche Funktionalitäten für manche Nutzer nicht relevant sind.
+	Diese interessieren sich nur für die Kernfunktionalitäten des Moduls. 
+	Wären hier sämtliche Abhängigkeiten mit einem normalen \texttt{requires} deklariert, müsste diese vollständig im Modulpfad liegen, was in einem größeren Umfang der Anwendungen resultiert.
+	
+	Mit \texttt{requires static} gekennzeichnete Abhängigkeiten müssen nicht im Modulpfad liegen, damit ein Nutzer das Modul verwenden kann.
+	Entscheidet sich der Nutzer, die zusätzlichen Fähigkeiten des Moduls später zu verwenden, so kann er jederzeit die entsprechende Bibliothek dem Modulpfad hinzufügen und die zusätzlichen Funktionen des Moduls nutzen.
+	
+	\item \textbf{\texttt{requires transitiv}}: 
+	Transitive Abhängigkeiten sind etwas spezieller.
+	Es handelt sich um Abhängigkeiten, welche zunächst in einem Modul als transitiv gekennzeichnet werden. 
+	Ein Drittmodul, welches das erste Modul einbindet, kann direkt auf die transitive Abhängigkeit zugreifen, ohne diese erneut initialisieren zu müssen.
+	
+%TODO: Referenz auf Abbildungen evtl.
+	
+\end{itemize}
+
+\subsubsection{Ressourcenfreigabe}
+Gemäß dem Prinzip der starken Verkapselung, werden standardisiert keine Modulressourcen freigegeben. 
+Die Freilegung der Modul-API muss explizit in der Desktiptor-Datei angegeben werden.
+
+Mit dem \texttt{exports} Schlüsselwort können alle öffentlichen Klassen eines Pakets zugänglich gemacht werden.
+Alles, was sich in anderen Paketen des Moduls befinden, bleibt weiterhin unzugänglich.
+Auf Pakete, die mit dem einfachen \texttt{exports} markiert wurden, kann jederzeit zugegriffen werden.
+Eventuell soll jedoch verhindert werden, dass der Zugriff auf ein bestimmtes Paket öffentlich ist. 
+Eine Kombination von \texttt{exports} mit \texttt{to} kann einer beschränkten Liste von Modulen Zugriff auf das angegebene Paket gewähren.
+Der Zugriff von nicht angegebenen Modulen wird verweigert, es sei denn, das gleiche Paket wird zusätzlich mit einem einfachen \texttt{exports} ohne \texttt{to} freigegeben.
+
+\subsubsection{Reflexion}
+Reflexion in Java ist die Fähigkeit von Programmen ihre eigene Struktur zur Laufzeit analysieren und verändern zu können.
+In Vorgängerversionen vor Java9 konnte man über Reflexion relativ einfach auf sämtliche Ressourcen zugreifen, was unter anderem auch für viele bekannte Java-Sicherheitslücken verantwortlich war.
+
+Einer der Hauptziele vom Modulsystem ist jedoch eine höhere Sicherheit mithilfe von strenger Verkapselung zu erreichen. 
+Dies bedeutet, dass es nicht möglich sein sollte, unerwünscht Zugriff auf geschützte Ressourcen zu erhalten.
+
+Somit stehen beide Konzepte, Reflexion und strenge Verkapselung, wie bis jetzt beschrieben, im Widerspruch zueinander. 
+Eine Möglichkeit wäre es, Reflexion schlicht zu entfernen (bzw. als veraltet zu markieren), um eine höhere Sicherheit zu garantieren. 
+Dies zu tun wäre jedoch eine problematische Entscheidung, da Reflexion eine sehr nützliche und oft verwendete Java-Fähigkeit ist. 
+
+Stattdessen wird man ab Java9 bei Verwendung des Modulsystems - ähnlich zur Ressourcenfreigabe - aufgefordert, für jedes erstellte Modul explizit anzugeben, wer auf welche Ressourcen über Reflexion zugreifen kann. 
+Dadurch kann Reflexion weiterhin wie bisher verwendet werden.
+Zudem besteht nun die Möglichkeit festzulegen,  wer auf welche Ressourcen über Reflexion zugreifen kann. 
+
+Um ein Modul für reflexiven Zugriff zu öffnen, wird das Schlüsselwort\texttt{open} verwendet.
+Dieses gibt das gesamte Modul für Reflexion frei.
+Soll jedoch nur beschränkter Zugriff auf bestimmte Ressourcen erlaubt werden, muss stattdessen \texttt{opens} genutzt werden.
+Durch die Kombination von \texttt{opens} und \texttt{to} können sowohl Ressourcen als auch externe Module, die Zugriff erhalten sollen, beschränkt werden.
+
+
+\subsubsection{Dienste}
+Dienste (Services) sind ein neues Konzept, welche mit dem Modulsystem einführt wurden.
+Grundsätzlich werden zwei Bestandteile unterschieden:
+
+\begin{enumerate}[noitemsep]
+	\item Ein Interface oder eine abstrakte Klasse.
+	\item Eine oder mehrere Implementierungen dieses Interfaces / dieser abstrakten Klasse. 
+\end{enumerate}
+
+Interface und Implementierung befinden sich im Normalfall in separaten Modulen, können jedoch auch im gleichen Modul vorliegen.
+
+
+\begin{figure}[hbt!]
+\begin{lstlisting}[language = java, firstnumber = 1 ,]
+module service.implementation {
+	requires module.service;
+	provides module.service.Service with service.implmentation.MyImplementation;
+}
+\end{lstlisting}
+\caption{Modul2 module-info.java}
+\label{fig:module2-info}
+\end{figure}
+
+
+Um eine Implementierung eines Dienstes bereitzustellen, werden \texttt{provides} und \texttt{with} verwendet.
+\texttt{prodives} gibt das bzw. den zu implementierende Interface bzw. Dienst an. 
+\texttt{with} wird verwendet, um eine Implementierung dieses Dienstes anzugeben und für Konsumenten-Module bereitzustellen. 
+Im obigen Beispiel wird eine Implementierung für das \texttt{module.service.Service} Interface angegeben und bereitgestellt.
+
+
+\begin{figure}[hbt!]
+\begin{lstlisting}[language = java, firstnumber = 1 , escapeinside={(*@}{@*)}]
+module service.user {
+	requires module.service;
+	uses module.service.Service;
+}
+\end{lstlisting}
+\caption{Service Implementierung Nutzen}
+\label{fig:service-use}
+\end{figure}
+
+
+Um einen Dienst einzubinden, muss  dieser zunächst als Abhängigkeit angeben werden, wie in Abbildung \ref{fig:service-use} zu sehen ist.
+Hier ist zu beachten, dass das Implementierungsmodul als Abhängigkeit deklarieren werden muss, es sei denn, das zu implementierende Interface befindet sich im gleichen Modul wie die Implementierung.
+%TODO überprüfen
+Schlussendlich wird der Dienst, der eingebunden wird mit \texttt{uses} deklariert.
+
+Ein Vorteil, den man hierdurch hat, ist der, dass die Implementierung des Interfaces auswechselt werden kann, ohne dass der Client-Code geändert werden muss.
+
+% TODO Add Link https://www.baeldung.com/java-9-modularity

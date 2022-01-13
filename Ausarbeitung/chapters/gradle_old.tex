@@ -1,0 +1,156 @@
+% !TeX spellcheck = de_DE
+
+\section{Gradle}
+
+Das folgende Kapitel befasst sich mit dem Build-Automatisierungswerkzeug Gradle.
+
+
+\subsection{Softwareentwicklung ohne Automatisierung}
+
+Die Erstellung von größeren Projekten vor der Einführung von Automatisierungswerkzeuge wie Ant, Maven und Gradle war sehr zeitintensiv und fehlerbehaftet, da viele kleine Schritte ausgeführt werden mussten.
+
+Ohne ein Automatisierungswerkzeug muss sich jeder Entwickler eigenständig um das Aufsetzen seiner Entwicklungsumgebung kümmern. 
+Er muss darauf Achten die korrekte Compiler-Version zu installieren, Datenbanken initialisieren und externen Abhängigkeiten verwalten.
+Jeder dieser Schritte beherbergt potenziell mehrere Fehlerquellen.
+Hierfür gibt es das berühmte Sprichwort: "Aber auf meiner Maschine läuft es".
+Die Gründe hierfür können unterschiedlich sein, meisten sind diese jedoch auf menschliches Versagen zurückzuführen.
+Die Entwickler haben somit einen signifikanten Teil Ihrer Zeit damit verbracht, erstens eine funktionierende Entwicklungsumgebung aufzusetzen und zweitens Probleme, welche durch Konfigurationsfehler der Umgebung entstanden sind zu lösen.
+
+\subsection{Ant und Maven}
+
+Grundsätzlich sind alle genannten Probleme, durch Automatisierung behebbar.
+Die meisten dieser Probleme wurden mit der Einführung der Werkzeuge Ant und Maven behoben.
+Doch auch diese weisen einige Funktionsdefizite für die heutigen Ansprüche auf. 
+
+Ant war die erste Lösung, es ist in der Lage die häufigsten wiederkehrende Aufgaben zu lösen.
+Es ist der Lage Quellcode zu kompilieren, Test durchzuführen, JAR Dateien zu erstellen usw.
+Um die einzelnen Aufgaben zu definieren wird XML verwendet.
+Zusätzlich ermöglicht es Ant Abhängigkeiten zwischen einzelnen Aufgaben zu erstellen, sodass man eine Ausführungshierarchie erzeugen kann.
+
+Zunächst liesen sich dadurch die aufgezeigten Probleme beheben, jedoch durch neue Anforderungen und Komplexität der Projekte, zeigten sich mit der Zeit folgende Schwachpunkte:
+Apache Ant stellt keine eigene Paketverwaltung bereit. Dies bedeutet, dass die Entwickler entweder sämtliche Abhängigkeiten manuell verwalten müssen oder dass zusätzlich eine externe Paketverwaltung-Software verwendet werden muss, welche wiederum manuell eingebunden werden muss.
+Ebenfalls problematisch, waren die fehlenden Richtlinien, was die Komplexität für die Einarbeitung in neue Projekte steigert.
+
+Ein weiteres Automatisierungstool, Maven, wurde eingeführt.
+Dieses adressierte einige der aufgezeigten Schwachstellen von Ant und brachte einige Neuerungen mit sich.
+Erstmals besitzt es eine eingebaute Paketverwaltung, mit der externe Abhängigkeiten vom Online-Repositores, wie MavenCentral aufgelöst werden. 
+Dadurch erübrigt sich die manuelle Verwaltung von externen Abhängigkeiten.
+Weiterhin wurden Richtlinien für den Aufbau einer Projektstruktur eingeführt.
+Durch die dadurch resultierende Vereinheitlichung, wird die Projekteinarbeitung signifikant erleichtert.
+%Die Einführung eines Build Lifecycles - Einführung von standardisierten Abläufen - 
+Durch die Vorgabe von sequentiellen abgearbeiteten, vordefinierten Phasen (Build-Lifecycle), wird der Aufwand z.B. zur Ausführung eines Projektes, minimiert.
+
+Die vergebene Richtlinien sind zu restriktiv, weiterhin  wird hier Buildlogik wieder über XML aufgebaut, was das Lesbarkeit stark verringert.Die Implementierung bzw. Erweiterung von Funktionalität, welche nicht bereits als Plugin verfügbar ist, ist mitunter sehr umständlich.
+
+Zusammengefasst ist die Wahl des richtigen Build-Tools eine Gratwanderung zwischen voll flexibel und erweiterbar mit dem Verlust von Standardisierung, sowie aufgeblähter Code und ohne Paketverwaltung mit Ant und leichte Konfigurierbarkeit inklusive eingebauter Paketverwaltung, jedoch stark eingeschränkte Sichtweise für unkonventionelle Projekte und komplexen Plugin-System mit Maven. Der nächste Abschnitt dieser Arbeit thematisiert ein moderneres Automatisierungssystem, Gradle, welches die aufgezeigten Probleme adressiert. 
+
+\subsection{Gradle}
+
+Im vorherigen Abschnitt wurden klassische Systeme vorgestellt und deren Vor- und Nachteile aufgezeigt.  Ein Wandel der Anforderungen an solche Systeme ist in der heutigen Zeit klar erkennbar.
+In den vergangenen Jahren haben sich die meisten Softwareentwicklungszyklen stark geändert. Durch Einführung von neuen Konzepten wie Continuous Integration und Continuous Delivery haben sich zusätzliche Anforderungen an Build-Systemen entwickelt, für die die klassischen Build-Systeme nicht mehr geeignet sind. Dementsprechend war die Nachfrage nach einem neuartigen System, das diesen Anforderungen entspricht, sehr hoch. Ein großer Schritt in der Evolution der Java basierten Build-Systeme stellte Gradle dar. Durch neuartige Konzepte und eine große Community wurden o.g. Schwächen der älteren Generation aufgenommen und stark verbessert.
+
+
+
+•	For years, builds had the simple requirements of compiling and packaging software.
+•	today: large and diverse software stacks
+•	multiple programming languages
+•	broad spectrum of testing strategies
+•	frequent and easy delivery to test and production environments
+•	Learned lessons from Ant and Maven
+	o	Takes best ideas tot he next level
+•	Declaratively modeling your problem domain using a powerful and expressive domain-specific language (DSL) implemented in Groovy instead of XML
+•	hard to define complex custom logic
+
+•	allows you to write custom logic in the language Java or Groovy
+•	Dependency management: automatically download artifacts from remote repositories
+
+Gradle provides
+•	Readable and expressive build language
+•	scripts are written in Groovy
+•	don’t have to be a Groovy expert to get started
+•	Groovy is written on top of Java, you can migrate gradually by trying out its language features
+•	You could even write your custom logic in plain Java
+
+•	its own implementation for dependency management
+•	highly configurable
+•	compatible as possible with existing dependency management infrastructures
+•	Gradle’s ability to manage dependencies isn’t limited to external libraries.
+multiproject builds
+migration easy from ant and maven
+•	Ant gets shipped with the runtime 
+•	using existing Ant tasks
+
+Warum?
+•	you end up mixing scripting code with or invoking external scripts from your build logic XML
+•	inevitably introduce accidental complexity
+•	But how do you create two different JAR files from one source tree without having to change your project structure? Just for this purpose, you’d have to create two separate projects
+
+XML is great for describing hierarchical data, but falls short on expressing program flow and conditional logic
+
+•	Gradle describes this unit of work as a task
+•	Part of Gradle’s standard DSL is the ability to define tasks very specific to compiling and packaging Java source code
+•	It’s a language for building Java projects with its own vocabulary that doesn’t need to be relevant to other contex
+•	Out-of-the-box Gradle provides you with two configuration blocks
+o	define the dependencies and repositories that you want to retrieve them from
+o	if the standard DSL elements don’t fit your needs, you can even introduce your own vocabulary through Gradle’s extension mechanism.
+•	Gradle’s DSL can be extended
+
+•	Gradle build scripts are declarative, readable, and clearly express their intention
+•	cuts down the size of a build script and is far more readable
+•	Gradle establishes a vocabulary for its model by exposing a DSL implemented in Groovy
+•	Gradle is an enterprise-ready build system, powered by a declarative and expressive Groovy DSL.
+•	DSL allows for flexibility by adapting to nonconventional project structures.
+•	Every Android project ships with Gradle as the default build system.
+•	strong community involvement, Gradle
+•	Each element in a Gradle script has a one-to-one representation with a Java class
+•	Having a Groovy-fied version of a class in many cases makes the code more compact than its Java counterpart
+•	new language features like closures
+•	exposing hooks into lifecycle phases, Gradle allows for monitoring and configuring your build script’s execution behavior
+
+•	Gradle’s big ideas 
+o	guidelines and sensible defaults for your projects
+o	Every Java project in Gradle knows exactly where source and test class file are supposed to live, and how to compile your code, run unit tests, generate Javadoc reports, and create a distribution of your code
+
+•	All of these tasks are fully integrated into the build lifecycle
+•	If you stick to the convention, there’s only minimal configuration effort on your part
+
+
+•	Every Java project starts with a standard directory layout
+•	It defines where to find production source code, resource files, and test code.
+•	Gradle calls this concept build by convention.
+•	The build script developer doesn’t need to know how this is working under the hood
+	o	concentrate on what needs to be configured
+	
+	•	Gradle takes the middle ground by offering conventions combined with the ability to easily change them
+	
+	•"	Gradle is an opinionated framework on top of an unopinionated toolkit.”
+	
+	
+	
+	
+	•	External dependencies may have a reference to other libraries or resources. We call these transitive 
+	o	Gradle provides an infrastructure to manage the complexity of resolving, retrieving, and storing dependencies
+	o	Local chache
+	
+	
+	o	Gradle supports incremental builds
+	o	It reliably figures out for you which tasks need to be skipped, built, or partially rebuilt.
+	o	No more running clean by default!
+	
+	•	Gradle supports parallel test execution.
+	•	To improve the startup performance, Gradle can be run in daemon mode
+	
+	Integration with other build tools
+	•	Gradle builds are 100\% compatible with Maven and Ivy repositories
+	•	Gradle provides a converter for existing Maven builds
+	•	Exposes helpüer class to your scripts called AntBuider, which fully blends into Gradles DSL
+	
+	•	Gradle wrapper allows for downloading and installing a fresh copy of the Gradle runtime from a specified repository on any machine you run the build on.
+	
+	
+	•	A nifty feature Gradle provides is the definition of dynamic tasks, which specify their name at runtime.
+	•	Gradle’s command-line implementation will in turn make sure that the task and all its dependencies are executed
+	•	multiple tasks in a single build run
+	•	ability to abbreviate camel-cased task names
+	o	gradle yayGradle0 groupTherapy → gradle yG0 gT
+	

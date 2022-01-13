@@ -1,0 +1,557 @@
+% !TeX spellcheck = de_DE
+
+\subsection{Laufzeit Meta-Programmierung mit Metaklassen}
+Zur Manipulation des Verhaltens von Metaklassen existieren zwei Möglichkeiten. 
+Die erste Variante sieht die Änderung von Metaklassen einer Klasse vor.
+Jede, nach der Manipulation erstellte Instanz einer Klasse, zeigt danach das neue Verhalten. 
+Im Normalfall wird dieses Verhalten jedoch nicht rückwirkend, auf bereits vorhandene Instanzen übertragen. 
+Diese weisen nach wie vor das unveränderte Verhalten auf. 
+Letzteres lässt sich durch die zweite Vorgehensweise realisieren. 
+Statt das Verhalten der gesamten Klasse zu manipulieren, ist es möglich einzelne Instanzen einer Klasse zu verändern. 
+%TODO Expando enalbe globbally evtl referenzieren.
+
+Ein weiterer wichtiger Punkt ist, dass Groovy mehrere verschiedene Metaklassen Typen unterstützt. 
+Die drei nachfolgenden Metaklassen kommen für diesen Versuch infrage und werden näher betrachtet:
+
+
+\begin{itemize}
+	\item \textbf{\texttt{MetaClassImpl}}:
+	Hierbei handelt es sich um die Standard Metaklasse. 
+	Diese ist die mitgelieferte Implementierung und wird verwendet, solange keine nachträglichen Veränderungen des Verhaltens durchgeführt wurden. 
+	Diese Metaklasse wird somit von allen Klassen verwendet, bei denen entweder keine Änderungen vorliegen, oder die Änderungen nur in der Klassendefinition, also vor dem Aufruf von \texttt{initialize()}; stattfinden.
+	
+	\item \textbf{\texttt{ProxyMetaClass}}:
+	Die Funktionsweise dieser Metaklasse lässt sich leicht aus ihrem Namen folgern. 
+	Diese Art der Metaklasse umschließt bereits existierende Metaklassen und leitet sämtliche Anfragen und Resultate der umschlossenen Metaklasse durch die Proxy-Metaklasse. 
+	Die Funktionsweise des Proxys kann verwendet werden, um zusätzliche Logik außerhalb einer Metaklasse zu realisieren und somit das normale Verhalten abzuändern.
+	
+	\item \textbf{\texttt{ExpandoMetaClass}}:
+	Bei dieser Metaklassen Implementierung handelt es sich um die wohl bekannteste, besonders mit dem Ziel von dynamischem Laufzeitverhalten vor Augen. 
+	Die ExpandoMetaClass erlaubt es, dass Laufzeitzustand und Verhalten von Objekten mit geringem Aufwand zu manipulieren oder zu erweitern.
+\end{itemize}
+
+
+Zwei der aufgezeigten Metaklassenimplementierungen werden hinsichtlich des Versuchs, zusätzliche Informationen aus Gradle zu gewinnen, weiter verfolgt. 
+Zunächst wird im Anwendungsfall die Verwendung \texttt{ProxyMetaClass} näher beschrieben, gefolgt vom Einsatz der \texttt{ExpandoMetaClass}. 
+In den folgenden Abschnitten werden beide Varianten anhand eines Beispiels näher erläutert.
+
+
+\subsubsection{Testbestimmung}
+\label{meta-run-test}
+Vor der Manipulation von Metaklassen in Gradle ist es wichtig herauszufinden, welche Limitierungen in beiden Ansätzen existieren.
+Um den Umfang der Fähigkeiten bzgl. der Metaprogrammierung von Groovy zu analysieren und potenzielle Schranken zu bestimmen wurde ein kleines Testprojekt entwickelt.
+
+Zunächst wurden interessante Testfälle für die Anwendung der Manipulation bestimmt. 
+Drei verschiedene Kategorien von Klassen wurden hierbei betrachtet bzw. versucht deren Metaklassen zu manipulieren:
+
+
+\begin{enumerate}
+	\item Klassen, welche direkt aufgerufen bzw. initialisiert werden. 
+	Dies ist der allgemeine Fall und erwartungsgemäß sollten hierbei keine größeren Überraschungen auftreten.
+	
+	\item Indirekte Klassen. 
+	Interessant ist es zu wissen, ob Änderungen von Metaklassen sich auch auf indirekt aufgerufene bzw. sich außerhalb des Kontextes befindlichen und verwendeten Klassen übertragen werden? 
+	Nach den Aussagen über Groovy's dynamisches Verhalten in Kapitel \ref{ch-groovy} müsste sollte dies zutreffen.
+	Demnach dürften auch hier keine Probleme zu erwarten sein, Groovys dynamische Natur wäre sonst schlecht realisierbar.
+	
+	\item Zuletzt soll die Metaklassen-Manipulation auch auf abstrakten Klassen untersucht werden. 
+	Genauer soll analysiert werden, ob eine Änderung der Metaklasse einer abstrakten Klasse, Auswirkung auf Klassen haben, welche von dieser erben.
+\end{enumerate}
+
+
+Die Anzahl der Testreihen verdoppelt sich durch den Fakt, dass die drei aufgelisteten Punkte jeweils für ProxyMetaClass und ExpandoMetaClass durchgeführt werden. 
+In Kapitel \ref{ch-groovy} erwähnt und in Abbildung \ref{fig:meta-mop} skizziert, dass Groovys dynamische Fähigkeiten mit der Java Welt kombinierbar sein sollten. 
+Sämtliche Aufrufe seitens Groovy sollten durch das MOP geleitet werden. 
+Abbildung \ref{fig:meta-mop} zeigt, dass dies nicht nur für Groovy Objekte der Fall sein sollte, sondern im Allgemeinen auch für alle Java-Objekte. 
+Dadurch ergaben sich insgesamt zwölf Testfälle, deren Ergebnisse zu untersuchen waren. 
+Ob auch die direkte Anwendung auf Java-Objekte wie beschrieben funktioniert, wird im Folgenden untersucht.
+
+
+\begin{figure}[hbt!]
+	\centering
+	\includesvg[width=0.65\columnwidth]{diagrams/MOP.svg}
+	\caption{Sämtliche Aufrufe in Groovy sollten durch den MOP geleitet werden.}
+	\label{fig:meta-mop}
+\end{figure}
+
+
+\subsubsection{MetaTester Projekt}
+%TODO Aufweitere Eigenschaften von groovy eingehen wie imports umbennen um Konflikte zu beheben
+%Und etwas weiter auf die einzelnen build.gradle eingehen.
+
+
+\begin{figure} [hbt!]
+\centering
+\begin{minipage}{10cm}
+	\dirtree{%
+		.1 MetaTester.
+		  .2 GroovyMaster.
+		    .3 src.
+			  .4 main.
+				.5 groovy.
+			      .6 gmaster.
+					.7 artwork.
+				      .8 Art.groovy.
+					  .8 Painting.groovy.
+					  .8 Sculpture.groovy.
+					.7 GroovyMaster.groovy.
+			.3 gradle.build.
+		  .2 JavaMaster.
+			.3 src.
+		      .4 main.
+			    .5 java.
+				  .6 jmaster.
+					.7 artwork.
+					  .8 Art.java.
+					  .8 ArtType.java.
+					  .8 Painting.java.
+					  .8 Sculpture.java.
+					.7 JavaMaster.java.
+			.3 gradle.build.
+		  .2 src.
+			.3 main.
+		      .4 groovy.
+				.5 MetaTester.groovy.
+				.5 CallInterceptor.groovy.
+		  .2 build.gradle.
+		  .2 settings.gradle.
+	}
+\end{minipage}
+	\caption{MetaTester Projekt-Layout}
+	\label{fig:meta-tester}
+\end{figure}
+
+
+Nach der Festlegung der Testfälle wurde für die Implementierung ein Gradle Projekt erstellt. 
+Das Testprojekt wiederum ist in drei Projekten unterteilt. 
+Die Struktur des Projekts ist in Abbildung \ref{fig:meta-tester} einsehbar. 
+Es wurde das Root Projekt \texttt{MetaTester} und zwei Unterprojekte \texttt{GroovyMaster} und \texttt{JavaMaster} erstellt. 
+
+Abbildung \ref{fig:mt-settings.gradle} zeigt den Inhalt der \texttt{settings.gradle} Konfigurationsdatei, in der eine erste Besonderheit von Gradle sichtbar ist:
+Die Erzeugung von Multi-Projekten in Gradle ist sehr simpel.
+Zunächst wird der Name des Root-Projekts dort definiert. 
+Um dem Root-Projekt zusätzliche Unterprojekte beizufügen, müssen diese lediglich in der \texttt{settings.gradle} Datei angegeben werden. 
+
+
+\begin{figure}[hbt!]
+\begin{lstlisting}[language=groovy]
+rootProject.name = 'MetaTester'
+include 'GroovyMaster'
+include 'JavaMaster'
+\end{lstlisting}
+\caption{Metatester \texttt{settings.gradle}}
+\label{fig:mt-settings.gradle}
+\end{figure}
+
+
+Jedes Unterprojekt besitzt wiederum eine eigene\texttt{build.gradle}-Datei, in denen für das Projekt spezifische Konfigurationen und Tasks definiert werden können. 
+Die beiden erwähnten Unterprojekte werden zum Testen der verschiedenen Varianten der Metaprogrammierung verwendet.
+Beide Unterprojekte beinhalten die gleichen Funktionalitäten, Klassen und Definitionen. 
+Sie unterschieden sich lediglich in der verwendeten Programmiersprache und besitzen unterschiedliche Namensgebungen, um Konflikte vorzubeugen.
+Analog zum Projektnamen verwendet \texttt{GroovyMaster} die Sprache Groovy und \texttt{JavaMaster} die Programmiersprache Java. 
+Die Implementierung derselben Funktionalitäten bzw. desselben Projekts wurde zur Validierung der Aussage, dass sämtliche Java-Aufrufe seitens Groovy durch das MOP geleitet werden durchgeführt.
+Im Anschluss wird genauer auf den Aufbau der einzelnen Projekte Bezug genommen.
+
+
+\paragraph{GroovyMaster/JavaMaster}
+Im übergeordneten Projekt befinden sich die zwei Unterprojekte \texttt{GroovyMaster} und \texttt{JavaMaster}. 
+Als adäquates Testprojekt für Klassen, abstrakte Klassen und Vererbung stellen diese Künstler dar.
+Jeder Künstler hat einen festen Namen und eine Sammlung an Kunstwerken, die er kreiert hat.
+Ein Künstler kann zwei Arten von Kunstwerken erstellen: Bilder und Skulpturen. 
+Zur Erstellung der beiden Kunstarten besitzen die Klassen separate Methoden. 
+Zusätzlich besitzen diese Klassen noch eine statische Methode \texttt{greetings()}, welche lediglich dazu dient, die Annahme zu verifizieren, dass sich statische Methodenaufrufe ebenfalls über deren Metaklassen problemlos manipulieren lassen.
+
+
+\paragraph{Art/ArtType/Painting/Sculpture}
+Die Klasse \texttt{Art} ist eine abstrakte Klasse. 
+Die darüber erstellten Kunstwerke besitzen einen eigenen Namen, den Namen des Künstlers, Angabe des Jahres, in der es erstellt wurde und eine Kategorisierung in eine Kunstrichtung. 
+Weiterhin besitzt die Klasse {Art} eine abstrakte Methode \texttt{info()}, welche zur Ausgabe von Informationen über einzelne Kunstwerke verwendet werden soll.
+\texttt{ArtType} ist eine Enum-Klasse, welche für die Bestimmung der Kunstrichtung eines Kunstwerkes verwendet wird. 
+Beide Kunstarten-Klassen \texttt{Painting} und \texttt{Sculpture} erben die Funktionalität der Klasse \texttt{Art}. 
+\texttt{Painting} und \texttt{Sculpture} unterscheiden sich dadurch, dass \texttt{Sculpture} eine zusätzliche Eigenschaft besitzt, in der die Größe der Skulptur abgespeichert wird. 
+
+In Abbildung \ref{fig:meta-tester} des Projektlayouts ist zu erkennen, dass die ArtType.groovy Datei nicht präsent ist. 
+Der Grund dafür ist, dass es in Groovy möglich ist, mehrere öffentliche Klassen in einer Groovy Datei zu hinterlegen. 
+In Java ist dies nicht möglich. 
+Da \texttt{ArtType} lediglich ein \texttt{enum} ist, welches ausschließlich in Klassen verwendet wird, die von \texttt{Art} erben.
+Demnach wurde \texttt{ArtType} in dieser in der \texttt{Art.groovy} Datei hinterlegt.
+
+
+\subsubsection{ProxyMetaClass}
+
+
+\begin{figure}[hbt!]
+	\centering
+	\includesvg[width=0.8\columnwidth]{diagrams/Interceptor.svg}
+	\caption{ProxyMetaClass verwendet den CallInterceptor um zusätzliche Logik beim Aufruf von }
+	\label{fig:meta-proxy}
+\end{figure}
+
+
+In dieser Testreihe soll das Verhalten von Gradle mithilfe der bereits erwähnten \texttt{ProxyMetaClass} manipuliert werden.
+Bevor diese Variante direkt in Verbindung mit Gradle verwendet wird, werden Proxy Metaklassen im MetaTester Projekt getestet. 
+Die Proxy-Metaklasse funktioniert ähnlich wie ein \textit{Decorator Pattern}, da es dynamisches Hinzufügen und Entfernen von Funktionalität zur Laufzeit ermöglicht.
+Um diese Klasse verwendet zu können, ist die Erstellung eines Interceptors nötig, der das \texttt{Interceptor} Interface einbindet. 
+Dieser Interceptor wird bei Erstellung einer Proxy Metaklasse an diese weitergereicht. 
+Ein Interceptor muss drei Methoden implementieren:
+
+\begin{itemize}
+	\item \texttt{beforeInvoke}:
+	In dieser Methode wird die Logik definiert, welche vor einem Methodenaufruf ausgeführt wird.
+	\item \texttt{afterInvoke}:
+	Analog zu \texttt{beforeInvoke} wird die implementierte Logik nach einem Methodenaufruf ausgeführt
+	\item \texttt{doInvoke}:
+	Hier kann Logik definiert werden, um den eigentlichen Methodenaufruf durchzuführen, oder zu blockieren.
+\end{itemize}
+
+Ein erster, einfacher Ansatz Information über interne Prozesse zu erhalten, ist es, sämtliche Methoden mit ihren Argumenten in der aufgerufenen Reihenfolge aufzulisten. 
+Um dies zu realisieren, wurde der in Abbildung \ref{fig:CallInterceptor.groovy} zu sehende Interceptor erstellt.
+
+\begin{figure}[hbt!]
+	\lstinputlisting[language=groovy] {code/CallInterceptor.groovy}
+	\caption{\texttt{CallIntercepter.groovy}}
+	\label{fig:CallInterceptor.groovy}
+\end{figure}
+
+In der \texttt{beforeInvoke} Methode wird vor jedem Methodenaufruf der Methodenname und die zugehörigen Argumente des Aufrufs ausgegeben. 
+In der Methode \texttt{afterInvoke} wird anschließend das zurückgelieferte Ergebnis des Aufrufs ausgegeben. 
+Die \texttt{doInvoke} Methode liefert immer \texttt{true} zurück, da in diesem Testfall keine Notwendigkeit besteht Methodenaufrufe zu verhindern. 
+Dieser Interceptor kann nun mit einer Proxy-Metaklasse kann nun mit einer Proxy-Metaklasse verwendet werden, um das geplante Ziel zu erreichen.
+Folgende in Abbildung \ref{fig:MetaTester-proxySample} dargestellte Methode wurde für diesen Zweck erstellt.
+
+
+\begin{figure}[hbt!]
+	\lstinputlisting[language=groovy, linerange={43-64}, firstnumber=43]{code/MetaTester.groovy}
+	\caption{\texttt{proxySample} Methode}
+	\label{fig:MetaTester-proxySample}
+\end{figure}
+
+Die \texttt{proxySample} Methode wurde so implementiert, dass sämtliche \texttt{ProxyMetaClass}-Fälle abgedeckt werden können. 
+\texttt{c2Intercept} (für \textit{class to intercept}) ist die Klasse, deren Aufrufe und Rückgabewerte aufgefangen werden sollen.
+
+Bereits in Zeile 44 sind zwei Groovy-spezifische Eigenschaften zu sehen. 
+Zunächst können in Groovy unter bestimmten Voraussetzungen Klammern bei Methodenaufrufen weggelassen werden.
+Weiter gibt es in Groovy verschiedene Arten von Strings. 
+Die hier verwendete Variante, die durch die doppelten Anführungszeichen zu erkennen ist, erlaubt String Interpolation.
+In der verwendeten Notation \texttt{\$\{\}}, wobei in diesem Fall die geschweiften Klammern optional sind, können Variablen oder Ausdrücke ausgewertet werden.
+In Zeile 45 wird evaluiert, ob die Klasse aus dem Unterprojekt \texttt{GroovyMaster} oder \texttt{JavaMaster} stammt. 
+Dies ist für den weiteren Verlauf wichtig, um die korrekten Instanzen für die Metaklassen Manipulation zu erstellen.
+In Zeile 48 wird das \texttt{picasso} Künstler Objekt erstellt. 
+Dabei wird eine weitere Fähigkeit von Groovy, die bereits in Kapitel \ref{ch-groovy} erwähnt wurde, ausgenutzt.
+Die Typauflösung erfolgt in Groovy zur Laufzeit, während diese in Java bereits zum Erstellungszeitpunkt erfolgt. 
+Was jedoch auch in Groovy nicht erlaubt ist , ist es die Typen nach dessen Festlegung erneut zu verändern. 
+Die Zuordnung von Picasso wie in Zeile 48 sichtbar, wäre in Java nicht zulässig. 
+Picasso müsste bereits vor der Kompilierung vom Typ GroovyMaster oder JavaMaster sein. 
+Die Instanz Picasso wird hier erstellt, um zu evaluieren, ob der Proxy auch mit bereits existierenden Instanzen arbeiten kann.
+
+In den Zeilen 52ff. wird der Interceptor und eine Proxy-Metaklasse für die \texttt{c2Intercept} Klasse erzeugt. 
+Anschließend wird der Interceptor dem Proxy zugewiesen.
+Zeilen 56 bis 63 stellt den interessanten Teil dieser Implementierung dar. 
+Die \texttt{use} Methode akzeptiert als Argument ein Closure, auf der die Proxy-Metaklasse angewendet werden soll.
+Wie schon erwähnt, wird an diesem Punkt erstmals überprüft, ob die Proxy-Metaklasse eine rückwirkende die \texttt{picasso} Instanz beeinflusst. 
+Im Anschluss wird eine neue Instanz \texttt{daVinci} erzeugt und getestet.
+Um Redundanz zu vermeiden wurde die \texttt{helper} Hilfsmethode  erstellt, dessen Inhalt in Abbildung \ref{fig:MetaTester-helper} einsehbar ist.
+
+
+\begin{figure}[hbt!]
+	\lstinputlisting[language=groovy, linerange={108-116}, firstnumber=108]{code/MetaTester.groovy}
+		\caption{\texttt{helper} Hilfsmethode}
+	\label{fig:MetaTester-helper}
+\end{figure}
+
+
+In dieser erstellen die Künstler Ihre Kunstwerke und geben die Informationen wieder aus.
+Groovy erleichtert den Umgang mit Datenbeständen. Dies wird in Zeile 109 sichtbar.
+Die forEach Methode erlaubt es, Logik in Form eines Closures zu definieren, mit dem leicht über Datenbestände iteriert werden kann.
+Da das Closure nur einen Parameter besitzt, muss dieser nicht explizit angegeben werden, stattdessen kann Schlüsselwort \texttt{it} verwendet werden.
+
+
+\paragraph{ProxyMetaClass-Tests}
+Wie bereits in \ref{meta-run-test} aufgelistet, gibt es sechs Fälle, die mit der Proxy-Metaklasse getestet werden sollen:
+Das Verhalten der ProxyMetaklassen in Kombination mit direkt und indirekt erzeugt und verwendeten Klassen. 
+Weiter soll geprüft werden, ob das Abfangen von abstrakten Klassen eine Auswirkung auf eine von dieser erbenden Klasse hat oder nicht. 
+Diese Tests werden einmal für das GroovyMaster und für das JavaMaster Projekt ausgeführt.
+Um die gelisteten Tests durchführen, wird nur die oben definierte \texttt{proxySample} Methode benötigt.
+Einzig die Klasse, dessen Aufrufe abgefangen werden soll, muss angepasst werden. 
+
+\begin{figure}[hbt!]
+	\lstinputlisting[language=groovy, linerange={25-30}, firstnumber=25]{code/MetaTester.groovy}
+	\caption{Die Sechs ProxyMetaklassen Testfälle}
+	\label{fig:MetaTester-Proxy-Cases}
+\end{figure}
+
+Es dürfte aus den Klassen-Namen leicht erkennbar sein, um welche Fälle es sich handelt.
+Fall 11 und 12 sind für die direkte Verwendung der Klassen definiert, 21 und 22  für die indirekte Verwendung und 31 und 32 für die abstrakten Klassen.
+
+
+%%%%%%%%%%%%%%%%%%%% Ergebnis
+
+
+
+
+
+\begin{figure}[t!]
+	\begin{subfigure}{\textwidth}
+		\lstinputlisting[, linerange={2-14}, firstnumber=2]{terminal/testresults/case11.txt}
+		\caption{Groovy Ausgabe}
+		\label{fig:proxres-direct-groovy}
+	\end{subfigure}
+
+	\begin{subfigure}{\textwidth}
+		\lstinputlisting[, linerange={2-22}, firstnumber=2]{terminal/testresults/case12.txt}
+		\caption{Java Ausgabe}
+		\label{fig:proxres-direct-java}
+	\end{subfigure}
+	
+	\caption{Ergebnis: Direkte Verwendung}
+	\label{fig:proxres-direct}
+\end{figure}
+
+
+\paragraph{Ergebnis - Direkte Verwendung}
+Bei der Auswertung der Ausgaben ist zu bemerken, dass nicht die gesamte Ausgabe aufgelistet wurde, sondern lediglich ein Anfangsteil.
+Bei der Groovy Ausgabe wurde die Proxy-Metaklasse auf die GroovyMaster Klasse angewandt. 
+Grundsätzlich konnte bereits erwartetes Verhalten verifiziert werden. 
+Die Änderungen haben keine Auswirkung auf die bereits erzeugte \texttt{picasso}-Instanz. 
+Das in \texttt{CallInterceptor} definierte Verhalten wird nur innerhalb der \texttt{use}-Methode verwendet. Weiter muss die Instanz entweder in dieser Methode erzeugt, oder dessen Metaklasse muss manuell mit der Proxy-Metaklasse ersetzt werden.
+
+Während sich die Groovy Variante erwartete Ergebnisse liefert, ist das Verhalten der Java Variante ein gänzlich anderes. 
+Erwartet wurde hier dasselbe Verhalten wie in der analogen Groovy Version. 
+Bemerkenswert ist hier, dass das im \texttt{CallInterceptor} definierte Verhalten bereits in der \texttt{picasso}-Instanz zu finden ist. 
+Es scheint, dass Aufrufe sämtlicher Instanzen der Klasse innerhalb der use Methode abgefangen werden, unabhängig davon, ob die Klasse bereits vor der Zuweisung der Proxy-Metaklasse existiert, oder erst nachträglich erstellt wird.
+
+
+%%%%%%%%%%%%%%%%%%%%
+
+
+\begin{figure}[t!]
+	\begin{subfigure}{\textwidth}
+		\lstinputlisting[linerange={2-16}, firstnumber=2]{terminal/testresults/prox-indir-groovy.txt}
+		\caption{Groovy Ausgabe}
+		\label{fig:proxres-indirect-groovy}
+	\end{subfigure}
+	
+	\begin{subfigure}{\textwidth}
+		\lstinputlisting[linerange={2-7}, firstnumber=2]{terminal/testresults/prox-indir-java.txt}
+		\caption{Java Ausgabe}
+		\label{fig:proxres-indirect-java}
+	\end{subfigure}
+	
+	\caption{Ergebnis: Indirekte Verwendung}
+	\label{fig:proxres-indirect}
+\end{figure}
+
+
+\paragraph{Ergebnis - Indirekte Verwendung}
+In diesem Fall wird das Verhalten der Painting Klasse modifiziert.
+Die Painting Klasse wird in diesem Fall nicht explizit im Testcode verwendet.
+Die Instanziierung und Methodenaufrufe der Painting Klasse erfolgen stets indirekt über eine GroovyMaster Instanz.
+Aus der Groovy Ausgabe werden keine unerwarteten Verhaltensweisen sichtbar.
+Alles scheint erwartungsgemäß zu  funktionieren.
+
+Während die Groovy Ausgabe keine Überraschungen liefert kann dies leider nicht von der Java Ausgabe behauptet werden. 
+In diesem Fall scheint der \texttt{CallInterceptor} nicht zum Einsatz zu kommen.
+Würden wir den Painting direkt aufrufen so 
+Bei der Kombination von Java und Groovy scheint es so als würde.
+Um das Verhalten genauer zu analysieren wurde zusätzliche eine Methode des indirekt erzeugte Painting, direkt mittels \texttt{picasso.art[0].info()} aufgerufen.
+Bei diesem Aufruf wurde das im \texttt{CallInterceptor} definierte Code angewendet.
+Die Aussage, dass sämtliche Java-Aufrufe durch Groovys MOP geleitet werden, scheint somit nur teilweise zu stimmen.
+Objekte, welche direkt im Groovy-Kontext verwendet werden, werden tatsächlich durch den MOP geleitet.
+Der Proxy hat keine Auswirkung auf Java-Objekte, die außerhalb eines Groovy-Kontexts zum Einsatz kommen.
+
+%Ein möglicher Grund hierfür ist das um Java-Interne Aufrufe durch den MOP zu leiten musste höchstwahrscheinlich sämtliche JavaCode Reverse Engineered werden was nur schlecht realisierbar wäre ist. 
+
+
+% TODO FRAGE: Warum funktioniert der TracingInterceptor ohne die verwendung von use
+
+
+\paragraph{Ergebnis - Abstrakte Klassen}
+
+In diesem Ansatz gibt es zusätzlichen Ausgaben.
+Der in \texttt{CallInterceptor} definierte Code wird somit nicht ausgeführt.
+Dies gilt sowohl für beide - Groovy und Java - Varianten.
+Metaklassen werden somit nicht vererbt.
+
+%%%%%%%%%%%%%%%%%%%%
+
+
+
+\subsubsection{ExpandoMetaClass}
+Im vorherigen Abschnitt wurden die Testfälle für die Proxy-Metaklasse betrachtet und deren Ergebnisse interpretiert. 
+Im folgenden Abschnitt wird eine weitere Kategorie der Metaklassen untersucht: Die Expando-Metaklassen. 
+In dieser Testreihe wurde der gleiche Ansatz verfolgt wie bevor, zusätzliche Informationen über die Methodenaufrufe und deren Argumente auszugeben. 
+Um dies zu realisieren wurde die in Abbildung \ref{fig:MetaTester-expandClass} abgebildete Methode implementiert.
+
+
+\begin{figure}[hbt!]
+	\lstinputlisting[language=groovy, linerange={66-82}, firstnumber=66]{code/MetaTester.groovy}
+	\caption{\texttt{expandClass}-Methode}
+	\label{fig:MetaTester-expandClass}
+\end{figure}
+
+
+Die \texttt{expandClass}-Methode manipuliert die \texttt{c2Expand}-Klasse. 
+Zwei Methoden kommen hierfür in Frage. 
+Die \texttt{metaclass.invokeMethod()} Methode wird erweitert, um das Verhalten von herkömmlichen nicht statischen Methoden zu verändern. 
+Die Methode \texttt{metaclass.‘static‘.invokeMethod()} wird zusätzlich für statische Methoden manipuliert, um auch hier weitere Informationen zu extrahieren. 
+Beide Varianten werden analog verwendet und erwarten als Argument ein Closure, welches die neue Logik beinhaltet. 
+Die übergebenen Closures halten zwei Variablen: \texttt{name} enthält den Namen der aufgerufenen Methode und die Liste \texttt{args} beinhaltet alle Argumente, welche beim Methodenaufruf übergeben wurden. 
+Die Parameter des Closures werden mithilfe der Zeichenkette "\texttt{->}" vom eigentlichen Körper des Closures getrennt. 
+
+
+Innerhalb der beiden Closures wird zunächst die passende Methode in der Metaklasse gesucht und anschließend die Information über Methodenname und deren Argumente ausgegeben (Zeile 68 und 76). 
+Im Falle des Vorhandenseins erfolgt ein Aufruf dieser Methode.
+Am Ende des Closures werden Informationen über das Ergebnis ausgegeben und der eigentliche Methodenaufruf zurückgeliefert. 
+Groovy benötigt kein explizites \texttt{return} Schlüsselwort.
+Falls kein \texttt{return} Ausdruck vor dem Ende einer Methode oder eines Closures aufgerufen wird, gilt das Ergebnis des letzten Ausdrucks als Rückgabewert. 
+In Zeilen 72 und 80 werden die analog in Zeilen 70 und 78 definierten Ausdrücke zurückgegeben. 
+Bemerkenswert ist hierbei, dass sich in diesem Ausdruck, der Aufruf der originalen Methode verbirgt.
+Dies ist essenziell, um die normale Funktionalität der erweiterten Klasse zu gewährleisten.
+
+
+\begin{figure}[hbt!]
+	\lstinputlisting[language=groovy, linerange={84-106}, firstnumber=66]{code/MetaTester.groovy}
+	\caption{\texttt{expandSample} Methode}
+	\label{fig:Metatester-expandSample}
+\end{figure}
+
+
+Die \texttt{expandSample} Methode ist ähnlich zur bereits eingeführten \texttt{proxySample} Methode aufgebaut. 
+Bevor die Funktionalität der übergebenen Klasse erweitert wird, wird zunächst eine Instanz dieser erstellt, um wie in der vorherigen Testreihe zu überprüfen, ob die Erweiterungen rückläufige Auswirkungen zeigen. 
+Daraufhin werden die Erweiterungen bzw. Manipulation der Metaklasse vorgenommen. 
+Im Anschluss erfolgt eine Überprüfung der originalen Klasse und das Erstellen einer neuen Instanz.
+
+
+\begin{figure}[hbt!]
+	\begin{subfigure}{\textwidth}
+		\lstinputlisting[linerange={9-23}, firstnumber=9]{terminal/testresults/case41.txt}
+		\caption{Groovy Ausgabe}
+	\end{subfigure}
+	
+	\begin{subfigure}{\textwidth}
+		\lstinputlisting[linerange={9-27}, firstnumber=9]{terminal/testresults/case42.txt}
+		\caption{Java Ausgabe}
+	\end{subfigure}
+	
+	\caption{Ausgabe der Proxy-Tests}
+	\label{fig:proxy-out}
+\end{figure}
+
+
+\paragraph{Ergebnis - Direkte Verwendung}
+Genau wie bei den ProxyMetaklassen, verhält sich die Expando-Metaklassen wie erwartet.
+Die Änderung der Metaklasse einer Klasse hat keine Auswirkung auf vorher erzeugte Instanzen dieser Klassen.
+Nachträglich erstellte Instanzen der Klasse wiederum weisen das neue Verhalten auf.
+
+Bei der Java Variante ist wieder ein unerwartetes Verhalten zu beobachten.
+%TODO: Verhalten beschreiben
+Gleiches Verhalten ist in Groovy durch die Verwendung von \texttt{ExpandoMetaClass.enableGlobally()} reproduzierbar. 
+In Groovy kann dieses Verhalten jedoch leicht durch Verwendung von \texttt{ExpandoMetaClass.disableGlobally()} wieder deaktiviert werden.
+Leider scheint dieses Methode keine Auswirkung auf die Java Ausgabe zu haben.
+
+
+%%%%%%%%%%%%%%%%%%%% Indirekte Verwendung 
+
+\begin{figure}[hbt!]
+	\begin{subfigure}{\textwidth}
+		\lstinputlisting[firstline=9, firstnumber=9]{terminal/testresults/case51.txt}
+		\caption{Groovy Ausgabe}
+	\end{subfigure}
+	
+	\begin{subfigure}{\textwidth}
+		\lstinputlisting[firstline=9, firstnumber=9]{terminal/testresults/case52.txt}
+		\caption{Java Ausgabe}
+	\end{subfigure}
+	
+	\caption{Ausgabe der Expando Tests}
+	\label{fig:expando-out}
+\end{figure}
+
+\paragraph{Ergebnis - Indirekte Verwendung}
+%TODO Frage: erweiter oder überschieben ?
+In der Ausgabe des Groovy Tests ist erneut kein unerwartetes Verhalten zu beobachten.
+Analog zu der Proxy-Metaklasse beeinflusst die Expando-Metaklasse sämtliche, nachträglich erstellten Instanzen der erweiterten Groovy Klasse, auch wenn diese im Hintergrund, also indirekt, erstellt und verwendet wurde. 
+
+Unglücklicherweise gilt das gleiche nicht für Java Klassen. 
+Erweitert man die Funktionalität von Java Klassen, so scheint dies keine Auswirkung auf Instanzen, die außerhalb des Kontextes erstellt worden sind zu haben.
+Es scheint so als, ob nur direkte Java-Aufrufe auch tatsächlich durch das MOP geleitet werden.
+
+
+\paragraph{Ergebnis - Abstrakte Klassen}
+Analog zum Proxy-Ansatz hat das in der Metaklasse definierte Verhalten auch hier nicht ausgeführt.
+Demnach wurden hier ebenfalls keine weiteren Ausgaben aufgelistet.
+Das Ergebnis gilt sowohl für die Groovy als auch für die Java Variante.
+Es kann also abgleitet werden, dass Metaklassen nicht vererbt werden.
+
+
+
+
+
+
+
+
+%Probleme:
+%*	Die Gradle-Skripte werden zwar in Groovy geschrieben, leider stehen hier nicht sämtliche Fähigkeiten von Groovy zur verfügen. 
+%Dies ist bereits sichtbar, wenn versucht wird Standard-Annotationen, welche Teil der offiziellen Groovy Distributionen sind, zu verwenden.
+%Bereits hier beschwert sich gradle, das es diese nicht kennt.
+%Tatsächlich handelt es sich bei Gradle's Groovy Sprache nicht um die vollständige Implementierung sondern lediglich wie bereits in Kaptiel \ref{gradle} kurz erwähnt um eine beschränkte DSL-Sprache
+%
+%Änderung beim Verhalten der Metaklassen sind nicht rückärts wirkend.
+%Die Änderungen der Metaklasse einer Klasse sind nicht rückläufig auf bereits vorhandenen Instanzen anwendbar
+
+\subsection{Schlussfolgerung}
+
+Eine Zusammenfassung der Ergebnisse ist in Tabelle \ref{tab:meta-result} zu sehen.
+Die Behauptung das sämtliche Java-Aufrufe seitens Groovy durch den MOP-geleitet werden, ist somit nur bedingt zutreffend.
+Nur direkte Java-Aufrufe innerhalb von Grooby werden tatsächlich durch den MOP geleitet.
+Und auch hierbei sind solche Aufrufe an den Kontext des Aufrufes gebunden und nachträgliche Aufrufe außerhalb werden
+
+Nach der Implementierung unseres Beispieles wurde jedoch schnell ein offensichtliches
+Problem sichtbar: Der Proxy ist für einen Einsatz innerhalb des Gradle-
+Build-Skriptes ungeeignet. 
+Zwar kann der Proxy auch in Kombination mit bereits existierende
+Klassen-Instanzen verwendet werden, um jedoch Methodenaufrufe abfangen
+zu können, müssen diese Aufrufe innerhalb der \texttt{use} Methode des Proxy's erfolgen.
+%Dies ist jedoch nicht möglich, die nachfolgende und weitgehend unbekannte Aufrufe
+in der Proxy Hineinzuwerfen, ist das aktuelle Ziel nicht mithilfe der ProxyMetaClass realisierbar.
+
+\begin{table}[hbt!]
+	\centering
+	\begin{tabular}{| l | c | c | c | c |}
+		\hline
+		\rule{0pt}{15pt}    & G Proxy & J Proxy & G Expando	& J Expando 	\\ 
+		\hline
+		Direkte Klassen		& ok 	& ok*  	& ok	& ok* 	\\
+		Indirekte Klassen 	& ok 	& {-} 	& ok	& {-} 	\\
+		Abstrakte Klassen	& {-} 	& {-} 	& {-}	& {-} 	\\
+		\hline
+	\end{tabular}
+	\caption{Ergebnisse der einzelnen Testfälle}
+	\label{tab:meta-result}
+\end{table}
+
+\paragraph{Anwendung auf Gradle}
+
+Es wurde versucht beide Ansätze zu implementieren, jedoch erfolglos.
+Ein Ziel dieser Arbeit war es mithilfe von Groovy sich einen Überblick über Gradles interne Funktionalität zu  gewinnen, \textbf{ohne Gradles Quellcode zuvor zu untersuchen}. 
+Zusätzlich bestand Anfangs der Eindruck das der Kern von Gradle hauptsächlich in Groovy implementiert sei und es somit möglich sein sollte Groovys Besonderheiten auszunutzen, um Wissen über interne Abläufe von Gradle zu extrahieren.
+
+Da sämtliche Versuche jedoch fehlgeschlagen sind, wurde die Entscheidung getroffen die Anfangsannahme zu überprüfen.
+Bei Betrachtung von Gradles Github Repository  ist unter der Sprachverteilung zu sehen das Groovy mit einem Anteil um die im 46\%, intensiv im Gradle-Project genutzt wird. 
+Java bildet jedoch auch mit 44\% einen beträchtlichen Anteil des Projekts.
+Eine erste Vermutung könnte somit sein, dass ein Großteil von Gradle tatsächlich in Groovy implementiert ist.
+Leider wird bei genauerer Betrachtung der Registries diese Vermutung jedoch nicht bekräftigt, ganz im Gegenteil es scheint als würde Groovy überwiegend zur Testimplementierungen verwendet.
+Gradles Grundfunktionalitäten hingegen scheinen hauptsächlich in Java implementiert zu sein.
+
+Da Gradles Kern in Java implementiert zu sein schein entstand der Bedarf zu überprüfen wie Gut Groovy und Java tatsächlich miteinander interagieren können was direkt zur Erstellung dieser Testfälle geführt hat.
+
+Wie aus Tabelle \ref{tab:meta-result} herauszulesen ist, scheint es jedoch, dass Groovys Metaprogrammierung, entgegen mancher Behauptung, nur beschränkt in Kombination mit herkömmlicher Java-Paketen verwendet werden, was unter anderem die verschiedenen erfolglosen Versuche erklären dürfte.
+
+Ein weiterer Ansatz war es die Gradle-Scripte selbst zu manipulieren.
+Gradles Build-Scripte können sowohl in Groovy oder auch Kotlin verfasst werden.
+Die Idee bestand somit darin Groovy zu verwenden und Metaprogrammierung innerhalb dieses Skriptes zu verwenden.
+Leider gibt auch hierbei schwerwiegende Einschränkungen, die einen solchen Ansatz verhinderten.
+Die Scripte können zwar in Groovy verfasst werden, beim Experimentieren wurde es jedoch schnell klar das nur eine Untermenge der Groovy Fähigkeiten bzw. Eigenschaften auch tatsächlich in diesen Skripten genutzt werden.
+Dies wird bereits beim Versuch wird Standard-Annotationen, welche Teil der Standard Groovy Distributionen sind, zu verwenden.
+Hier beschwert sich Gradle bereits, diese nicht zu kennen.
+Wie bereits in \ref{ch-gradle} beschrieben verwendet Gradle tatsächlich nur eine Groovy DSL, und erschwert bzw. verhindert somit den Ansatz, Build-Skripts zu verwendet, um komplexe Information aus Gradle zu extrahieren.

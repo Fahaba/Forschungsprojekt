@@ -1,0 +1,113 @@
+% !TeX spellcheck = de_DE
+
+\section{Module-Generator}
+\label{ch-generator}
+
+Das folgende Kapitel thematisiert die Architektur und den Nutzen des Generator Projekts. 
+Das Generator Projekt ist ein Groovy Projekt, welches verwendet werden kann um ein Gradle Projekt mit variabler Anzahl von Modulen zu erstellen.
+Die Abhängigkeiten der Module sind dabei Baumstrukturartig aufgebaut.
+Hierbei können die Parameter des Baumes variiert werden, wodurch der Modulaufbau in Breite und Tiefe leicht verändert werden kann. 
+Um Java JPMS System in Verbindung mit Gradle und Unterstützung einer Entwicklungsumgebung seine Grenzen zu treiben, wurde hier den als zu erforschenden Bereich betrachtet. 
+Entdeckungen und besondere Auffälligkeiten werden im Folgenden Erläutert.
+Die Datei \texttt{Generator.groovy} enthält die Main Methode der oben erwähnten Routine und kann durch Benutzereingaben in den Programmparametern die Struktur des generierten Modulbaums verändern. 
+Zwei Parameter werden hierbei unterschieden und sind wie folgt benannt:
+
+\begin{itemize}
+	\item \texttt{Children} gibt die Anzahl der Kinderknoten eines Knotens im Baum an. Dadurch wird die Breite beeinflusst
+	\item \texttt{Depth} ist der Parameter für die Angabe der Tiefe. Dieser gibt die Anzahl an Kantenüberhängen an, um vom Wurzelknoten zu einem Blatt zu traversieren.
+\end{itemize}
+
+Nachfolgend werden die Module mithilfe der in Abbildung \ref{fig:createModules} dargestellten Methode \texttt{createModules(int nodeCount, int childCount)} generiert.
+
+\begin{figure} [hbt!]
+	\lstinputlisting[language=java, firstline=182, lastline=29, firstnumber=182 ]{code/Generator/Generator.groovy}
+	\caption{\texttt{createModules} Methode}
+	\label{fig:createModules}
+\end{figure}
+
+
+\begin{figure} [hbt!]
+	\begin{subfigure}{\textwidth}
+		\begin{lstlisting}
+			(0..depth).each {
+				nodeCount += Math.pow(children, it)
+			}
+		\end{lstlisting}
+		\caption{Code Form}
+		\label{fig:gen-module-code}
+	\end{subfigure}
+
+	\begin{subfigure}{\textwidth}
+		\begin{framed}
+			\[ \exists d, c, k \in \mathbb{N}: \sum_{i=0}^{d} c^{i} = k = Knotenzahl \]
+		\end{framed}
+
+		\caption{Mathematische Form}
+		\label{fig:gen-module-formula}
+	\end{subfigure}
+	
+	\caption{Berechnung der Anzahl der zu erstellenden Knoten}
+	\label{fig:gen-module}
+\end{figure}
+
+
+
+
+Für jeden Knoten im Baum wird folgende Routine durchgeführt:
+Zunächst wird ein Offset bestimmt, der dafür sorgt, dass die Parent-Knoten aufgrund der verwendeten Zählmethode immer im korrekten Bereich bleiben. 
+In Zeile 185 ist dieser Offset durch childCount -2 definiert.
+Für jeden Knoten wird der Parent Knoten bestimmt.
+Folgende Formel wurde für diese Situation definiert:
+
+\[parent = (node + offset).intdiv(childCount)\]
+
+Die Variable \textit{node} ist die deterministische Nummer des aktuell betrachteten Knotens im Baum. 
+Auf diese Zahl wird der o.g. Offset addiert und anschließend  mit einer Ganzzahligen Division ohne Rest über die Anzahl der Kinder verknüpft. Das Resultat ist die Nummer des Vaterknotens im Baum.
+
+\[ \exists p, n, o, c \in \mathbb{N} : (n+o) \; div \; c =p \]
+
+Nun müssen weitere Formeln für die Berechnung der einzelnen Kinderknoten eines Knotens hinzugezogen werden. 
+In Zeile 190-195 der \texttt{createModules}-Methode werden die Kinder des aktuell betrachteten Knotens in einem Array gespeichert und mit folgender Formel berechnet:
+
+Zur Bestimmung der Kinder eines Knotens \texttt{p} wird folgende Formel verwendet:
+\[k= c*p-o+i, i \in \{0,...,c-1\}\]
+Wobei $c$  die Anzahl der Kinder eines Knotens und $o$ dem bereits definierten Offset entspricht.
+Dann ist \texttt{k} das \texttt{i}-te Kind von \texttt{p}.
+Dieser Knoten wird im o.g. \texttt{children} Array gespeichert. 
+Die Verwendung von \texttt{parent} und \texttt{child} Knoten wird noch genauer betrachtet.
+
+Nach Berechnung von \texttt{p} und \texttt{k} wird für jeden betrachteten Knoten im Baum die Methode \texttt{createModule(int moduleNumber, int parent, List children)} aufgerufen.
+Die zu übergebenden Parameter dafür wurden bereits analog zu Abbildung \ref{fig:createModules} berechnet bzw. gespeichert. 
+In dieser Methode, welche in Abbildung \ref{fig:createModule} dargestellt ist, wird der eigentliche Quellcode des jeweiligen Java Moduls erzeugt.
+
+\begin{figure} [b!]
+	\lstinputlisting[language=java, firstline=109, lastline=147, firstnumber=109 ]{code/Generator/Generator.groovy}
+	\caption{\texttt{createModule} Methode Teil 1}
+\end{figure}
+
+\begin{figure} [t!] \ContinuedFloat
+	\lstinputlisting[language=java, firstline=148, lastline=175, firstnumber=148 ]{code/Generator/Generator.groovy}
+	\caption{\texttt{createModule} Methode Teil 2}
+	\label{fig:createModule}
+\end{figure}
+
+In den Zeilen 116 – 126 werden zunächst die Ordnerstruktur für die Modulerzeugung angelegt. 
+Der erstellte Pfad ist Abhängig vom aktuell betrachteten Baumknoten bzw. dessen Knotenalias. 
+Zeilen 129f. generieren die \texttt{build.gradle} Datei. 
+Dort werden die jeweiligen Abhängigkeiten für die Kinder des Knoten referenziert, um später mit diesen kommunizieren zu können (Zeile 132). 
+Um beidseitige Kommunikation zu gewährleisten, wird in Zeilen 135 – 145 eine \texttt{module-info.java} Datei erstellt. 
+Diese beinhaltet Berechtigungsinformationen, welche Module auf das aktuelle Modul zugreifen dürfen.
+ 
+Der Anwendungsfall sieht hier die Kommunikation zwischen Vater- und Kind-Knoten des erstellten Modulbaums vor. 
+Spezifischer besitzt jedes erstellte Module eine \texttt{main} und eine \texttt{hiDad} Methode.
+Die \texttt{main} Methode wird verwendet um die \texttt{hiDad} Methoden aller Kinder aufzurufen.
+Die \texttt{hiDad} ist ähnlich zur \texttt{main} Methode, gibt jedoch am Ende zusätzliche eine Nachricht mit dem eigenen Namen und dem Namen des Vater-Moduls aus, falls dieses existiert.
+Im konkreten Fall sieht das Java Modulsystem vor, durch die Verwendung des \enquote{exports}-Anweisung Funktionalität an andere Module zu vererben. 
+Die Anweisung \enquote{requires} lässt die Implementierung von anderen Modulen zu. 
+
+Im nachfolgenden Block der Methode \texttt{createModule} (Zeile 149 – 175) wird der Quellcode für das jeweilige Modul in eine Java Datei generiert. 
+Hier wird eine klassische Hello-World Methode erstellt, um als Test eine einfache Ausgabe zu erhalten. 
+Außerdem wird eine Methode generiert, die von anderen Modulen aufgerufen wird.
+
+Um ein funktionierendes Gradle-Projekt zu erhalten, müssen die Module schlussendlich in die \texttt{settings.gradle} Datei eingetragen werden, die dem Projekt angehört. 
+Die Methode\texttt{ modBuildGradle(File rootDir, int modules)} übernimmt diese Aufgabe und schreibt für jedes Modul ein entsprechendes \texttt{include}-Statement :

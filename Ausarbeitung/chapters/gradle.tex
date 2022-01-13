@@ -1,0 +1,171 @@
+% !TeX spellcheck = de_DE
+
+\section{Gradle}
+\label{ch-gradle}
+Die Erstellung von größeren Projekten vor der Einführung von Automatisierungswerkzeuge wie Ant, Maven und Gradle war sehr zeitintensiv und fehlerbehaftet, da viele kleine Schritte ausgeführt werden mussten.
+Ohne ein Automatisierungswerkzeug musste sich jeder Entwickler eigenständig um das Aufsetzen einer Entwicklungsumgebung kümmern. 
+Er musste darauf Achten, die korrekte Compiler-Version zu installieren, Datenbanken initialisieren und externe Abhängigkeiten verwalten.
+Jeder dieser Schritte beherbergt potenziell mehrere Fehlerquellen.
+Das berühmte Sprichwort: \enquote{Aber auf meiner Maschine läuft es}, beschreibt diese Situation adäquat.
+Die Gründe hierfür können unterschiedlich sein, meistens sind diese jedoch auf eine menschliche Fehlerquelle zurückzuführen.
+Die Entwickler haben somit einen signifikanten Teil Ihrer Zeit damit verbracht, erstens eine funktionierende Entwicklungsumgebung aufzusetzen und zweitens Probleme, welche durch Konfigurationsfehler der Umgebung entstanden sind zu lösen.
+
+Das folgende Kapitel befasst sich mit dem Build-Automatisierungswerkzeug Gradle und dessen Vorgängern Ant und Maven. Es werden Vor- und Nachteile der einzelnen Systeme genannt und systemspezifische Lösungen präsentiert, um die oben genannte Probleme zu adressieren.
+
+
+\subsection{Ant und Maven}
+Die ersten Werkzeuge, welche einen Lösungsansatz für die genannten Probleme lieferten und auch heutzutage noch Verwendung finden sind Ant und Maven.
+Doch auch diese weisen einige Funktionsdefizite für die heutigen Ansprüche auf.
+Im Weiteren werden ein paar Einzelheiten zu diesen Automatisierungssystemen aufgezeigt.
+
+Ant war der erste Ansatz zur Lösung häufig wiederkehrender Aufgaben und Probleme.
+Es ist in der Lage Quellcode zu kompilieren, Tests durchzuführen, JAR-Dateien zu erstellen usw.
+Um die einzelnen Aufgaben zu definieren wird XML verwendet.
+Zusätzlich ermöglicht es Ant Abhängigkeiten zwischen den einzelnen Aufgaben festzulegen, sodass eine Ausführungshierarchie erzeugt werden kann.
+
+Zunächst ließen sich dadurch die aufgezeigten Probleme beheben, jedoch durch neue Anforderungen und steigender Komplexität der Projekte, zeigten sich mit der Zeit folgende Schwachpunkte:
+Apache Ant stellt keine eigene Paketverwaltung bereit. 
+Dies bedeutet, dass die Entwickler entweder sämtliche Abhängigkeiten manuell verwalten müssen oder zusätzlich die Notwendigkeit besteht, eine externe Paketverwaltung-Software zu verwenden, welche wiederum manuell eingebunden werden muss.
+Ebenfalls problematisch sind die fehlenden Richtlinien, was die Komplexität für die Einarbeitung in neue Projekte steigert.
+
+Ein neuerer Ansatz zur Adressierung der oben genannten Probleme wurde durch die Bereitstellung des Automatisierungstools \textit{Maven} geboten.
+Dieses adressierte einige der aufgezeigten Schwachstellen von Ant und brachte einige Neuerungen mit sich.
+Erstmals besitzt ein Automatisierungstool eine eingebaute Paketverwaltung, mit der externe Abhängigkeiten von Online-Repositories wie \textit{MavenCentral} aufgelöst werden. 
+Dadurch erübrigt sich die manuelle Verwaltung von externen Abhängigkeiten.
+Weiterhin wurden Richtlinien für den Aufbau einer Projektstruktur eingeführt.
+Durch die dadurch resultierende Vereinheitlichung wird die Projekteinarbeitung signifikant erleichtert.
+Außerdem wird durch die Vorgabe von sequentiellen abgearbeiteten, vordefinierten Phasen (Build-Lifecycle), der Aufwand z.B. zur Ausführung eines Projektes, minimiert.
+
+Die vergebenen Richtlinien sind jedoch zu restriktiv. Weiterhin wird in Maven die Buildlogik über XML definiert, was die Lesbarkeit stark verschlechtert.
+Die Implementierung bzw. Erweiterung von Funktionalität, welche nicht bereits als Plugin verfügbar ist, ist mitunter sehr umständlich.
+
+Zusammengefasst ist die Wahl zwischen Ant und Maven in zwei Extremfälle gegliedert.
+Ant ist voll flexibel und erweiterbar, dessen Code ist jedoch aufgebläht. Außerdem besitzt es keine eigene Paketverwaltung und ist nicht standardisiert, sodass das Einarbeiten in Projekte neuen Entwicklern schwer fallen kann.
+Maven hingegen ist standardisiert und somit leicht konfigurierbar und benötigt keine externe Paketverwaltung.
+Es besitzt jedoch im Vergleich zu Ant eine stark eingeschränkte Sichtweise für unkonventionelle Projekte, sowie ein komplexes Plugin-System, das auch hier das Hinzufügen von benutzerspezifischer Logik erschweren kann. 
+Der nächste Abschnitt dieser Arbeit thematisiert ein moderneres Automatisierungssystem, Gradle, welches die aufgezeigten Probleme adressiert und mit modernen Ansätzen intuitiv zu meistern versucht.
+
+\subsection{Gradle}
+Im vorherigen Abschnitt wurden die zwei klassischen Java-Automatisierungs-Systeme vorgestellt und deren Vor- und Nachteile aufgezeigt.
+Ein Wandel der Anforderungen an solche Systeme ist in der heutigen Zeit klar erkennbar.
+In den vergangenen Jahren haben sich die meisten Softwareentwicklungszyklen stark geändert. 
+Durch Einführung von neuen Konzepten wie \textit{Continuous Integration} und \textit{Continuous Delivery} haben sich zusätzliche Anforderungen an Build-Systemen entwickelt, für die die klassischen Build-Systeme nicht mehr geeignet sind. 
+Dementsprechend war die Nachfrage nach einem neuartigen System, das diesen Anforderungen entspricht, sehr hoch. 
+Ein großer Schritt in der Evolution der Java basierten Build-Systeme stellt Gradle dar.
+Durch neuartige Konzepte und eine große und aktive Community wurden o.g. Schwächen der älteren Generationen von Automatisierungstools aufgenommen und stark verbessert.
+Hauptsächlich wurden Build-Systeme in früheren Generationen für die Erstellung von Software und deren Realisierung in Paketen verwendet.
+Heutzutage werden häufig große und vielfältige Projekte verwaltet, die unter anderem viele verschiedene Programmiersprachen beinhalten und ein breites Spektrum an automatischen Teststrategien enthalten. 
+Der Fokus liegt dabei auf frequentierter und einfacher Darbietung von neuen Versionen in Test- oder Produktionsumgebungen. 
+
+Gradle liefert eine lesbare und vor allem ausdrucksvolle Sprache für die Konfiguration von Automatisierungsumgebungen.
+Ein Build-Skript in Gradle wird in Groovy oder Kotlin definiert. 
+In Kapitel \ref{ch-groovy} wurde Groovy bereits vorgestellt und dessen Vor- und Nachteile genauer dargelegt. 
+Die Besonderheit bei Groovy liegt darin, dass keine besonders fortgeschrittenen Kenntnisse nötig sind, um ein Gradle Build-Skript zu erstellen.
+Groovy ist Java basiert und bietet die Möglichkeit, Schritt für Schritt Eigenschaften dieser Sprache auszutesten.
+Auch das Erstellen von vollständig in Java verfassten Skripten ist möglich. 
+Groovy verwendet dabei kein XML zur Konfiguration von Build-Skripten, sondern setzt auf eine mächtige und ausdrucksstarke DSL (\textit{Domain Specific Language}), implementiert in Groovy oder Kotlin. 
+Dadurch ist es möglich, komplexere Logik in Java oder Groovy zu implementieren, die von vordefinierten Strukturen abweicht.
+Die Verwendung von XML bei Ant und Maven führt schnell dazu, dass Build-Skripte schnell schwer lesbar werden. 
+XML ist eine gute Wahl zum Beschreiben von hierarchischen Daten, hat jedoch gravierende Schwächen beim Ausdruck von Programmfluss und bedingungsabhängiger Logik. 
+Zusätzliche Logik ist daher nur bedingt implementierbar.
+Deshalb ist es teilweise notwendig, externe Skripte einzubinden um bestimmte Funktionalitäten zur Verfügung zu stellen.
+Dies hat als Konsequenz eine unbeabsichtigte Komplexität von Build-Skripten.
+
+Der Ablauf von einem Gradle Skript ist in sogenannte Tasks unterteilt. 
+Jeder Task ist Teil eines standardisierten Ablaufs (Build Lifecycle) und kann durch entsprechende Hooks abgeändert bzw. erweitert werden.
+Der grundsätzliche Ablauf eines Skripts bleibt dabei immer konform zu der Strategie des Build-Lifecycles.
+Es gibt drei Phasen, die intern durchlaufen werden:
+
+
+\begin{itemize} [noitemsep]
+	\item Initialisierung
+	\item Konfiguration
+	\item Ausführung
+\end{itemize}
+
+
+In der Phase der Initialisierung wird evaluiert welche und wie viele Projekte am Build-Vorgang beteiligt sind.
+Gradle sucht dabei nach der \textit{settings.gradle}-Datei. 
+Diese wird pro Build-Vorgang einmal vor der Erstellung von Projektinstanzen ausgeführt und erlaubt verschiedene Subprojekte zu definieren, die mehrere \textit{build.gradle}-Dateien beinhalten. 
+Außerdem können Kommandozeilen Parameter definiert werden. 
+Vor allem wird das Gradle Objekt zugreifbar, um auf etwaige ProjektHandler zuzugreifen.
+
+In der Konfigurationsphase werden alle \textit{build.gradle}-Dateien von allen beteiligten Projekten ausgeführt.
+Die darin definierten Tasks werden in einen gerichteten azyklischen Graph (DAG) übersetzt.
+Der DAG hierbei drückt aus, dass Tasks nicht wiederholbar ausgeführt werden können und keine Schleifen definierbar sind.
+Die Konfigurationsphase kann nach Änderungen immer wieder erneut angestoßen werden.
+
+In der letzten Phase der Ausführung werden alle Tasks in der Reihenfolge der Abhängigkeiten nach der im DAG definierten Ordnung ausgeführt.
+In dieser Phase wird der Hauptteil des Build-Lifecycles ausgeführt. 
+Hier wird der Quellcode übersetzt, in Klassen kompiliert und z.B. in ausführbare JAR-Dateien verpackt.
+
+Alle Tasks werden voll in diesen Zyklus eingebunden und müssen nur minimal konfiguriert werden, wenn gewisse Konventionen eingehalten werden.
+Zum Beispiel hat jedes Java Projekt eine standardisierte Verzeichnisstruktur. 
+Der zu kompilierende Quellcode liegt grundsätzlich im \textit{src}-Ordner, sowie die kompilierten \textit{.class}-Dateien im \textit{build}-Ordner, zusätzliche Ressourcen im \textit{res}-Ordner und Testklassen im \textit{test}-Ordner.
+Wenn keine Änderungen an dieser Struktur vorgenommen wird, kann Gradle automatisch Quellcode, Tests und zusätzliche Ressource-Dateien finden und in den Buildvorgang einbinden.
+Dieses Vorgehen wird Build-By-Convention genannt. 
+Dadurch kann sich ein Entwickler stärker auf die eigentliche Entwicklung des Projekts fokussieren und verbringt signifikant weniger Zeit damit, das Projekt ausführbar zu machen.
+Dieses Prinzip gab es bei Maven auch schon, jedoch bringt Gradle wie schon beschrieben die Möglichkeit, diese Konventionen leicht zu verändern bzw. zu erweitern.
+
+Gradle unterstützt inkrementelle Builds. 
+Vor jeder Phase wird evaluiert, welche Veränderungen vorgenommen wurden und bestimmt, welche Phasen oder Tasks übersprungen und (partiell) wiederholt werden müssen.
+Ein deutlicher Zeitgewinn ist bei großen Projekthierarchien zu erkennen, denn diese müssen nicht wie gehabt bei Änderungen komplett neu erstellt werden.
+Auch definierte Tests können durch simple Konfiguration zur schnelleren Evaluierung parallel Ablaufen. 
+Allgemein ist ein Overhead beim starten jedes Gradle Vorgangs zu verzeichnen.
+Hierfür kann Gradle im Deamon-Modus als Hintergrundprozess laufen. 
+
+Auch wenn Gradle eine alleinstehende Technologie darstellt, bleiben andere Build-Tools kompatibel.
+Maven und Ivy Abhängigkeiten können ohne weiteres eingebunden und verarbeitet werden und Gradle stellt eine Möglichkeit der Konvertierung von vorhandenen Maven Projekten.
+Für Ant ist eine Helfer-Klasse namens \textit{AntBuilder} implementiert, die Ant-Builds voll in die Gradle DSL abbildet.
+Als zusätzliche Erleichterung muss Gradle nicht manuell aufgesetzt werden. Der Gradle Wrapper stößt den Prozess des Downloads und der Neuinstallation einer sauberen Laufzeitumgebung an.
+Dadurch kann Gradle auf jeder Maschine ohne Weiteres lauffähig werden.
+
+Gradle liefert eine eigene Implementierung für die Verwaltung von externen Abhängigkeiten. Sind im Projekt zu verwendende Artefakte noch nicht lokal vorhanden bzw. eingebunden, werden diese automatisch heruntergeladen und dem Buildvorgang bereitgestellt. Dabei bliebt die Paketverwaltung von Gradle weiterhin kompatibel zu schon vorhandenen Infrastrukturen von Ant (mit Ivy) und Maven. Gradle ist außerdem in der Lage, transitive Abhängigkeiten von externen Bibliotheken aufzulösen. 
+
+
+\subsubsection{Vergleich und Besonderheiten}
+
+\begin{figure}[t!]
+	\begin{subfigure}{\textwidth}
+		\lstinputlisting[language=xml]{code/gradle/maven.xml}
+		\caption{Maven-Konfigurationsdatei}
+		\label{sub:config-sample-maven}
+	\end{subfigure}
+	
+	\begin{subfigure}{\textwidth}
+		\lstinputlisting[language=groovy]{code/gradle/gradle.build}
+		\caption{Gradle-Konfigurationsdatei}
+		\label{sub:config-sample-gradle}
+	\end{subfigure}
+	
+	\caption{Vergleich zwischen Maven \ref{sub:config-sample-maven} und Gradle  \ref{sub:config-sample-gradle}}
+	\label{fig-compare-maven-gradle}
+\end{figure}
+
+Gradle liefert eine DSL, implementiert in Groovy. 
+Einige Besonderheiten sind zu beachten.
+Viele Features von Groovy zielen darauf ab, unnötige Komplexität zu vermeiden und den direkt sichtbaren Quellcode sauber und leicht verständlich zu gestalten.
+Die Absichten von Gradle sind, Build-Skripte leserlich, klar und ausdrucksvoll definieren zu können. Genau diese Eigenschaften ließen sich zuletzt in Kapitel \ref{ch-groovy} herausarbeiten.
+
+Im direkten Vergleich in Abbildung \ref{fig-compare-maven-gradle} erkennt man die klaren Absichten von Gradle im Zusammenspiel mit Groovy. 
+Beide Abbildung \ref{sub:config-sample-maven} und \ref{sub:config-sample-gradle} sind semantisch identisch. 
+Die Gradle Variante in Abbildung \ref{sub:config-sample-gradle} gewinnt jedoch deutlich an Lesbarkeit.
+
+Jedes Element in einem Gradle Skript besitzt eine eins-zu-eins Repräsentation mit einer Java Klasse, die letztendlich in Groovy implementiert ist. 
+Die Flexibilität von Groovy erlaubt es, die Klassen in vielen Fällen kompakter darzustellen als in Java.
+Außerdem können auch neue Spracheigenschaften wie Closures verwendet werden.
+Hooks in den Build-Lifecycle erlauben Änderungen im Standard-Ausführungsverhalten des Build-Skripts und bieten Möglichkeiten für Monitoring und Konfiguration des Projekts.
+Ein weiteres besonderes Feature, dass durch Groovy bereitgestellt wird, ist die Möglichkeit, Tasks dynamisch zu erzeugen. 
+Diese dynamisch definierten Tasks werden erst zur Laufzeit evaluiert:
+
+
+\begin{figure} [hbt!]
+	\lstinputlisting[language=groovy]{code/gradle/dynamic/build.gradle}
+	\caption{Dynamische Tasks in Gradle}
+	\label{fig:dyn-tasks}
+\end{figure}
+
+In Abbildung \ref{fig:dyn-tasks} ist ein Beispiel zu sehen, bei dem Tasks mithilfe von Laufzeitvariablen benannt werden. Dies wird dynamisch zur Laufzeit ausgewertet, sodass sich aus den Zeilen 8-12 drei verschiedene Tasks ergeben (\texttt{yayGradle1}, \texttt{yayGradle2} und \texttt{yayGradle3}).
+
+Mittlerweile wird Gradle unter anderem in jedem Android Projekt als Standard Build-System genutzt, was dazu führt, dass Gradle durch starkes Community-Interesse stetig vorangetrieben wird. 
+%todo: drüber nachdenken oder wegmachen

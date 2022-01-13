@@ -1,0 +1,159 @@
+% !TeX spellcheck = de_DE
+
+\subsection{Compilezeit Metaprogrammierung mit AST Transformationen}
+Da die vorherigen Versuche, zusätzliche Informationen über Gradle zu erlangen, nicht erfolgreich waren, wurde ein zweiter Ansatz gewählt. 
+In Kapitel \ref{ch-groovy} wurde beschrieben, dass in Groovy die Möglichkeit besteht, AST-Transformationen mithilfe von Annotationen leicht zu erstellen. 
+Die Idee war, eine AST-Transformation im Aufruf von Gradle durchzuführen, um die bisher nicht erreichten Ergebnisse zu erzielen. 
+Die Idee hierbei war es, ein Visitor Pattern zu verwenden, welches über Knoten von Klassen und Methoden iteriert und deren Namen und Felder ausgeben kann. 
+
+
+\subsubsection{Erstellung einer AST Transformation}
+Wie bereits von Groovy erwartet, ist für die Erstellung einer solchen Transformation keine aufgeblähte Logikimplementierung nötig. 
+Abbildung  \ref{fig:GlobalAst-visit} demonstriert den groben Aufbau der AST-Transformation.
+
+
+\begin{figure}[hbt!]
+	\lstinputlisting[language=java, linerange={19-28}, firstnumber=19]{code/ast-transformation/MyGlobalASTTransformation.groovy}
+	\caption{Grundgerüst zum Abfangen der AST-Knoten}
+	\label{fig:GlobalAst-visit}
+\end{figure}
+
+
+%Die importierten Pakete wurden hier für eine bessere Übersichtlichkeit nicht mit abgebildet. Die essenziellen Pakete sind:
+%
+%%TODO insert code listing
+%\begin{figure}
+%	\lstinputlisting[language=java]{code/ast-transformation/MyGlobalASTTransformation.groovy}
+%	\caption{text}
+%	\label{fig:}
+%\end{figure}
+
+In Zeile 19 befindet sich ein Kommentar, der Compiler Phasen und ByteCode Generierung anspricht. Groovys Kompiliervorgang ist in Phasen unterteilt:
+
+\begin{itemize}[nosep]
+	\item Initialization
+	\item Parsing
+	\item Conversion
+	\item Semantic Analysis
+	\item Canonicalization
+\end{itemize}
+
+Es ist an dieser Stelle nicht notwendig, alle Phasen explizit anzusprechen. 
+Um das Beispiel zu visualisieren, werden die Phasen Conversion und Semantic Analysis näher erläutert. 
+In der Conversion Phase wird die in der vorherigen Parsing Phase erstellte Repräsentation \textit{Concrete Syntax Tree} (CST), die sich noch sehr nah am Quellcode befindet, in den Abstract Syntax Tree (AST) übersetzt. 
+Da eine AST Transformation im Weiteren durchgeführt werden sollte, musste dies entsprechend nach der Conversion Phase passieren. 
+In der darauffolgenden Phase Semantic Analysis werden unter anderem die Auflösung von Klassen, statische Einbindungen von Paketen bzw. Libraries sowie Sichtbarkeit von Variablen validiert. 
+Diese wurde somit als passende Phase für den Ansatz gewählt.
+
+In Zeile 20 wird eine Annotation verwendet, die dem Compiler signalisiert, in welcher Phase des Kompilierungsvorgangs die AST-Transformation durchgeführt werden soll. Die Annotation bezieht sich auf die darunter definierten Klassen der Transformation, die in diesem Fall, abgebildet in Zeile 21, mit dem Namen \texttt{MyGlobalASTTransformation} versehen wurde. Um Groovys Funktionalitäten für AST-Transformationen verwenden zu können, wird die Schnittstelle \texttt{ASTTransformation} eingebunden. Diese bietet die Methode \texttt{visit()} an, die im Folgenden  in Zeile 24 überschrieben wird.
+
+Dafür wurde eine Methode \texttt{recursiveTraverse()} definiert, die als Argument ein Objekt akzeptiert. Einer der beiden Argumente der \texttt{visit} Methode hält ein Array des Typs \texttt{ASTNode}. Der erste Eintrag des Arrays enthält den Wurzelknoten des AST-Baums. Dieser wird an die neu erstellte Methode als Argument übergeben. In der nächsten Abbildung \ref{fig:GlobalAst-recursiveTraverse} wird diese Methode dargestellt.
+
+
+\begin{figure}[hbt!]
+	\lstinputlisting[language=java, linerange={30-56}, firstnumber=30]{code/ast-transformation/MyGlobalASTTransformation.groovy}
+	\caption{\texttt{recursiveTraverse} Methode zur Einbindung zusätzlichen Logik}
+	\label{fig:GlobalAst-recursiveTraverse}
+\end{figure}
+
+
+Wie im Namen der Methode zu sehen, wird diese an bestimmten Punkten rekursiv verwendet. In den Zeilen 33, 36 und 40 werden die Klassentypen der Objekte überprüft. Da der Methode nur ein allgemeines Objekt übergeben wird, ist es wichtig deren Typen zu überprüfen, da dadurch der Anker der Rekursion definiert ist. In einem AST befinden sich unter anderem Knoten für Klassen und Methoden. Diese werden an eben erwähnten Stellen abgefragt. Zeile 33 überprüft, ob das Objekt dem Typ \texttt{ModuleNode} entspricht. Dies stellt den Wurzelknoten des AST-Baums dar. Daraus werden alle Klassen über die Methode \texttt{getClasses()} extrahiert und mit jedem Klassenobjekt eine Rekursion gestartet.  In Zeile 36 wiederholt sich dieser Vorgang für den Typ \texttt{ClassNode}. Hier werden jedoch mit der Methode \texttt{getMethods()} alle Methoden dieses Klassenknotens rekursiv betrachtet.
+
+Jede rekursiv definierte Methode muss einen Anker besitzen, um keine Endlosschleife zu produzieren. Der Anker für die Methode \texttt{recursiveTraverse()} beginnt in Zeile 40. Wenn das gerade betrachtete Argument vom Typ \texttt{MethodNode} ist, also eine Methode im AST-Baum repräsentiert, wird die folgende Logik ausgeführt:
+
+Ein \texttt{Statement} Objekt wird in Zeile 42 erstellt, welches eine Instanz der Klasse \texttt{ExpressionStatement} ist. 
+Dieses erwartet als Parameter wiederum ein Objekt des Typs \texttt{Expression}. 
+\texttt{Expression} Objekte können mehr oder weniger frei definiert werden.
+Im abgebildeten Fall soll ein Methodenaufruf erzeugt werden. 
+Im Konstruktor von \texttt{MethodCallExpression} werden drei Dokumente erwartet. 
+Das erste ist wieder ein Objekt des Typs \texttt{Expression} und stellt die Klasse bzw. das Objekt dar, auf dem die Methode ausgeführt werden soll. 
+In Zeile 44 wird dafür die Variable \texttt{this} im aktuellen Kontext der betrachteten Methode verwendet. 
+Da die Variable \texttt{this} zum Zeitpunkt der Erstellung der AST-Transformation auf die Klasse \texttt{MyGobalASTTransformation} verweist, kann diese nicht einfach als Parameter verwendet werden. 
+Es ist notwendig, dass diese im Kontext zu den betrachteten Methoden stehen. 
+Dies wird durch die Erstellung einer Instanz des Typs \texttt{VariableExpression} erreicht. 
+Die Variable \texttt{this} wird hier als String im Konstruktor ausgewertet und verweist danach auf die entsprechende Methode. 
+
+Das zweite Argument des Konstruktors von \texttt{MethodCallExpression} erwartet eine Methode, welche aufgerufen werden soll. 
+Erneut wird hier ein \texttt{Expression} Objekt als Parametertyp verlangt. 
+Analog zur \texttt{VariableExpression} funktioniert dies über die Klasse \texttt{ConstantExpression}. 
+Der Methodenname wird als Parameter übergeben. Da weiterhin das Ausgeben von zusätzlichen Informationen über den aktuell betrachteten Kontext von Methoden und Klassen das Ziel in diesem Versuch bleibt, bietet sich hierfür die Methode \texttt{println} an. 
+Diese ist in jedem Kontext erreichbar und ausführbar. 
+
+Der dritte Parameter von \texttt{MethodCallExpression} ist ein \texttt{Expression} Objekt, das die Argumente widerspiegelt, die in der aufzurufenden Methode verwendet werden. \texttt{ArgumentListExpression} kann hier verwendet werden, um diese Parameter in das passende Objekt umzuwandeln. \texttt{ArgumentListExpression} verlangt ein Expression Objekt. 
+Da ein String ausgegeben werden soll, wurde dafür die in der Rekursion aktuell betrachtete Methode gewählt und mit \texttt{toString()} zu Testzwecken in eine Zeichenkette umgewandelt. 
+Diese wird durch die schon bevor erwähnte Klasse \texttt{ConstantExpression} der \texttt{ArgumentListExpression} weitergereicht.
+
+Die letzten drei Abschnitte beschreiben den Vorgang, den AST-Knoten für jede Methode einer Klasse abzuändern, sodass am Anfang der Methode eine Kommandozeilenausgabe stattfindet, die eine Stringrepräsentation dieser zeigt. 
+Bisher wurde das dazu benötigte \texttt{Statement} Objekt erstellt und die dafür verwendeten Argumente korrekt initialisiert. 
+Die Änderung wurde bisher noch nicht auf den Knoten übertragen. 
+Dies wird wie folgt in Zeile 53f. realisiert:
+Alle bereits vorhandenen Statementobjekte der Methode werden durch \texttt{((BlockStatement)obj.code).statements} als Liste von \texttt{Statement} Objekten zugreifbar. Die built-in Methode \texttt{add} der Liste wird dazu verwendet, um das oben erstellte neue \texttt{Statement} an erster Stelle der Methode einzubinden. 
+An diesem Punkt endet jeder Rekursionsdurchlauf. 
+Letztendlich werden dadurch alle erreichbaren Methoden Knoten im AST-Baum verändert, ohne den Quellcode des Programms zu verändern. 
+
+%TODO Überarbeiten
+Wie bereits von Groovy erwartet ist die Erstellung einer AST-Transformation relativ simpel im Vergleich zur klassischen ByteCode Manipulation in Java.
+Weniger als 60 Zeilen Quellcode inklusive der Einbindung von Paketen sind nicht sehr umfangreich in Anbetracht der komplexen Logik, die im Hintergrund abläuft.
+
+
+\subsubsection{Ausführung der AST Transformation}
+Die mit der oben beschriebenen Methode erstellten AST-Transformation kann mit einer Ausführung eines Groovy Programms im sogenannten Klassenpfad verwendet werden. 
+Im Klassenpfad werden externe Abhängigkeiten angegeben, mit denen das Programm ausgeführt werden soll. 
+Dafür muss die AST-Transformation in eine ausführbare \texttt{.jar}-Datei umgewandelt werden. 
+Hier kommt Gradle erneut in den Vordergrund. 
+Das AST-Transformation-Projekt ist als Gradle Projekt erstellt. 
+Einer der Standardtasks von Gradle ist der Task \texttt{JAR}. 
+Dieser stellt genau die oben beschriebene Funktionalität zur Verfügung. 
+An dieser Stelle wird ein Testprogramm benötigt, auf dem die AST-Transformation angewendet werden kann. 
+Abbildung \ref{fig:Greeter} skizziert das verwendete Testprogramm.
+
+\begin{figure}[hbt!]
+	\lstinputlisting[language=java]{code/ast-transformation/Greeter.groovy}
+	\caption{Testklasse für die AST-Transformation}
+	\label{fig:Greeter}
+\end{figure}
+
+Zu Testzwecken werden zwei Klassen erstellt \texttt{Greeter} und \texttt{Greeter2}. 
+\texttt{Greeter} besitzt eine \texttt{main}-Methode. 
+In dieser wird zunächst eine Ausgabe auf der Kommandozeile getätigt. 
+In Zeile 4ff. wird eine Instanz der Klasse \texttt{Greeter2} erstellt, deren Methode \texttt{test()} aufgerufen. Außerdem erfolgt ein Aufruf der Methode \texttt{hallo()}, die wiederum eine Ausgabe durchführt.
+
+\texttt{Greeter2} ist analog zu \texttt{Greeter} aufgebaut, mit der Ausnahme, dass diese Klasse keine \texttt{main}-Methode besitzt. 
+Die Methode \texttt{test()} macht eine Ausgabe und ruft die Methode \texttt{hallo2()} auf, die eine zweite Ausgabe auf der Kommandozeile tätigt.
+Diese zwei Klassen sind sehr gut für den nächsten Versuch geeignet, da Aufrufe zwischen den Klassen sowie verschachtelte Methodenaufrufe stattfinden.
+Die erstellte AST-Transformation, die nun in Form einer \texttt{.jar}-Datei vorliegt, wird nun zusammen mit dem Greeter Programm verwendet. 
+Der Aufruf erfolgt über die Kommandozeile und ist, unter der Annahme, dass sich die Jar-Datei und die Greeter Klasse im selben Verzeichnis befinden, wie folgt definiert:
+
+\begin{lstlisting}
+groovy -cp .\groovy-ast-transformation.jar .\Greeter.groovy
+\end{lstlisting}
+
+Im Normalfall produziert die Greeter Klasse folgende Ausgabe:
+
+\begin{lstlisting}
+Hello from the greet() method!
+Hello from the greet2() method!
+Hallo
+Hallo
+\end{lstlisting}
+
+
+Folgende Abbildung zeigt die veränderte bzw. zusätzliche Ausgabe die mithilfe des obigen Befehls produziert wird:
+
+
+\begin{lstlisting}
+MethodNode@1017953[Greeter#void main(java.lang.String[])]
+Hello from the greet() method!
+MethodNode@1405577[Greeter2#void test()]
+Hello from the greet2() method!
+MethodNode@1554656[Greeter2#void hallo2()]
+Hallo
+MethodNode@1226614[Greeter#void hallo()]
+Hallo
+\end{lstlisting}
+
+
+Wie zu erkennen, wurden alle vorhandenen Methoden mit der zusätzlichen Ausgabe versehen. 
+
+%TODO Anwendung auf Gradle
+

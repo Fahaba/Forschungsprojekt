@@ -1,0 +1,41 @@
+
+---  Intercepting gmaster.GroovyMaster class  ---
+
+Pablo Picasso created a new Painting.
+Pablo Picasso created a new Sculpture.
+The PAINTING named Guernica was created by Pablo Picasso in 1937
+The SCULPTURE named Bull's Head was created by Pablo Picasso in 1942, it has an height of 45cm.
+---  PROX    CAL: greetings -> 
+---  PROX    RES: greetings <- [Greetings form the Groovy Arts Association!]
+---  PROX    CAL: ctor -> [Leonardo da Vinci]
+---  PROX    RES: ctor <- [gmaster.GroovyMaster@16aa8654]
+---  PROX    CAL: createPainting -> [Mona Lisa][1505]
+---  PROX    CAL: println -> [Leonardo da Vinci created a new Painting.]
+Leonardo da Vinci created a new Painting.
+---  PROX    RES: println <- [null]
+---  PROX    RES: createPainting <- [true]
+---  PROX    CAL: createSculpture -> [The Virgin and the Laughing Child][1472][50]
+---  PROX    CAL: println -> [Leonardo da Vinci created a new Sculpture.]
+Leonardo da Vinci created a new Sculpture.
+---  PROX    RES: println <- [null]
+---  PROX    RES: createSculpture <- [true]
+---  PROX    CAL: createPainting -> [The Last Supper][1498]
+---  PROX    CAL: println -> [Leonardo da Vinci created a new Painting.]
+Leonardo da Vinci created a new Painting.
+---  PROX    RES: println <- [null]
+---  PROX    RES: createPainting <- [true]
+---  PROX    CAL: printArt -> 
+---  PROX    CAL: println -> [The PAINTING named Mona Lisa was created by Leonardo da Vinci in 1505]
+The PAINTING named Mona Lisa was created by Leonardo da Vinci in 1505
+---  PROX    RES: println <- [null]
+---  PROX    CAL: println -> [The SCULPTURE named The Virgin and the Laughing Child was created by Leonardo da Vinci in 1472, it has an height of 50cm.]
+The SCULPTURE named The Virgin and the Laughing Child was created by Leonardo da Vinci in 1472, it has an height of 50cm.
+---  PROX    RES: println <- [null]
+---  PROX    CAL: println -> [The PAINTING named The Last Supper was created by Leonardo da Vinci in 1498]
+The PAINTING named The Last Supper was created by Leonardo da Vinci in 1498
+---  PROX    RES: println <- [null]
+---  PROX    RES: printArt <- [[gmaster.artwork.Painting@68f1b17f, gmaster.artwork.Sculpture@1722011b, gmaster.artwork.Painting@57ad2aa7]]
+---  PROX    CAL: getClass -> 
+---  PROX    RES: getClass <- [class gmaster.GroovyMaster]
+---  PROX    CAL: greetings -> 
+---  PROX    RES: greetings <- [Greetings form the Groovy Arts Association!]

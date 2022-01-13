@@ -1,0 +1,25 @@
+% !TeX spellcheck = de_DE
+
+\section{Gradle-Analyse}
+\label{ch-metaprog}
+
+Das folgende Kapitel beinhaltet in einem umfassenden Teil den Versuch, mehr Informationen oder Funktionalität über Gradle zu gewinnen. 
+Das Ziel war, Gradle mithilfe von Spracheigenschaften von Groovy dazu zu bringen, zusätzliche Konsolenausgaben bei der Ausführung von Automatisierungsskripten zu tätigen, die den aktuellen Zustand, betrachtete Methoden sowie Klassen und Felder aufzeigen. 
+Ein Anhaltspunkt für diese Untersuchung bildeten die Gradle-Tasks und deren Fähigkeit, unter anderem Groovy Quellcode auszuführen. 
+Mit der gewonnenen Information wäre es unter Umständen möglich gewesen, auf interne Prozesse und auf die Funktionsweise von Gradle zu schließen, ohne dafür – da es sich bei Gradle um ein Open-Source Projekt handelt- direkt den öffentlichen Quellcode einzusehen.
+
+Die Annahme war, dass Gradle zum Großteil in Groovy implementiert ist und somit auch die in Kapitel  \ref{ch-gradle} aufgezeigten Groovy Spracheigenschaften auf Gradle anwendbar sind. 
+Nach dieser Annahme hätte sich Groovys dynamische Natur auf Gradle übertragen lassen müssen, um dessen Laufzeitverhalten zu manipulieren. 
+Der erste Ansatz zur Lösung dieses Problems stellte das in Kapitel \ref{ch-groovy} eingeführte Groovy Meta-Object-Protokoll dar. 
+Sämtliche Aufrufe werden zunächst durch das MOP geleitet, in dem sich zusätzliches Verhalten über Metaklassen definieren lässt. An dieser Stelle können unter anderem weitere Methodenaufrufe ausgeführt werden.
+
+Zwei generelle Ansätze wurden gewählt, um das oben beschriebene Verhalten zu realisieren. 
+Im ersten Versuch werden Metaklassen verwendet, um jegliche Methodenaufrufe abzufangen bzw. zu erweitern, ohne deren ursprüngliche Funktionsweise zu beeinträchtigen. 
+Beim zweiten Ansatz wird die AST-Metaprogrammierung in Groovy verwendet. 
+Beim Erstellungszeitpunkt würde hiernach das entsprechende Verhalten in den ByteCode eingebettet, ohne den eigentlichen Quellcode zu verändern.
+
+Im Folgenden werden die beiden Herangehensweisen näher beschrieben, wobei erstere weitere Unterteilungen aufweist.
+
+
+\input{chapters/practical-gradle/Runtime.tex}
+\input{chapters/practical-gradle/Compile.tex}

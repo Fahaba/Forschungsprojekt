@@ -1,0 +1,215 @@
+% !TeX spellcheck = de_DE
+
+\section{Benchmark}
+\label{ch-benchmark}
+
+Im folgenden Teil der Arbeit wird der im letzten Kaptiel  beschriebene Generator verwendet, um die Gradle Performance zu analysieren.
+Das Ziel dieses Kapitel ist eine Übersicht über Gradles Performance zu erstellen und mögliche Beschränkungen bzw. Probleme in der Verwendung von Gradle festzustellen.
+Weiterhin wird betrachtet, wie sich das Java JPMS System mit einer hohen Modulanzahl und vielen Abhängigkeiten verhält.
+
+\subsection{Versuchsbeschreibung}
+
+%TODO: Versionsangabe sämtlicher komponente
+
+Der \texttt{GroovyGenerator} wird verwendet, um mehrere Gradle-Projekte zu erstellen.
+Diese Projekte bestehen aus mehreren Java-Modulen, dessen Abhängigkeiten untereinander als Baumstruktur dargestellt werden kann.
+Die generierten Projekte unterscheiden sich in der Tiefe bzw. in der Anzahl der Kinder eines jeden inneren Knoten der Baumstruktur. 
+
+Grundsätzlich werden drei Aspekte von Gradle betrachtet: Kompilierzeit, benötigte CPU-Zyklen und Arbeitsspeicherverbrauch.
+Als Zusatz wird die Ausführungszeit von bereits kompilierten Projekten betrachtet.
+Des Weiteren sollte hieraus auch potenzielle Probleme oder Schranken sichtbar werden.
+
+Zum Bestimmen der benötigten Zeit wurden Start- und Endzeitpunkt der einzelnen Aufrufe bestimmt und in CSV-Dateien hinterlegt.
+Um den Arbeitsspeicher zu beobachten wurde ein Hintergrundskript verwendet, welches den Speicherverbrauch in 0.1 Sekunden-Intervallen abfragt.
+Diese Werte werden anschließend ebenfalls mit Zeitstempel in einer CSV-Datei ablegt.
+Zur Bestimmung der CPU Zyklen wurde das \texttt{perf} Werkzeug verwendet.
+
+Um einen Ausgangspunkt einnehmen zu können, mit denen die Gradle Ergebnisse verglichen werden, wurden die Projekte vorher \enquote{manuell}, mit \texttt{javac}- und später \texttt{java} kompiliert bzw. ausgeführt.
+Die oben beschriebene Messungen wurden somit ein Mal für den manuellen und ein weiteres Mal für den Gradle Ansatz durchgeführt.
+Beim \texttt{gradle run} Befehl wurde zusätzlich die Option \texttt{--no-daemon} angegeben, damit die Kompiliervorgänge unabhängig voneinander betrachtet werden können.
+
+Um den Einfluss der Performance-Messungen selbst auf das Ergebnis möglichst zu reduzieren, wurden Bash-Skripte zum Messen verwendet.
+Um vergleichsweise gute Ergebnisse zu erhalten sind die Tests nach einem sauberen Neustart des Rechners erfolgt.
+Außerdem wurde darauf geachtet, dass vor bzw. während der Benchmarks keine zusätzlichen Anwendungen gestartet wurden.
+
+Die Versuche wurden auf einem Linux-Rechner (Pop!OS/Ubuntu 20.04, Kernel 5.4.0) durchgeführt.
+In dieser Umgebung wurde Java AdoptOpenJDK in Version 11.0.7, Gradle 6.5.1 und Groovy 3.0.4 genutzt.
+
+
+\subsection{Erste Beobachtungen}
+Bei den ersten Durchläufen der zuvor definierten Benchmark-Verfahren sind einige Probleme sichtbar geworden. 
+In diesem Abschnitt wird kurz auf diese eingegangen und Verbesserungen vorgenommen.
+
+Abbildung \ref{fig:proto-result} zeigt den Speicherverbrauch und Zeitbedarf eines der ersten Benchmark Durchläufe.
+Grundsätzlich werden hier sämtliche Vorgänge abgebildet (\texttt{javac}, \texttt{java}, \texttt{gradle build} und \texttt{gradle run} in der angegebenen Reihenfolge).
+Die vertikal gestrichelten Linien visualisieren den Endzeitpunk des vorherigen Aufrufs und den Abfangzeitpunkt des nächsten Aufrufs.
+Der fast konstante Speicherverbrauch stellt die Kompilierung der einzelnen Module mit \texttt{javac} dar.
+Anschließend wird das erste Modul jedes Projekts aufgerufen. 
+Dies ist in der Abbildung schlecht zu erkennen, da hierfür vergleichsweise wenig Zeit benötigt wird.
+Daraufhin wird der Vorgang für \texttt{gradle build} und \texttt{gradle run} wiederholt.
+
+Zunächst wurde Gradles Unfähigkeit, Projekte mit vielen Knoten zu kompilieren sichtbar.
+Beim Projekt mit vier Kinder pro Konten mit Tiefe fünf und beim Projekt mit fünf Kinder pro Knoten und Tiefe fünf hat Gradle die Kompilierung mit der Meldung, dass der Heap voll ausgelastet sei, abgebrochen.
+
+In Abbildung \ref{fig:proto-result} kann abgelesen werden, dass Gradle lediglich um die fünfhundert Megabyte zu diesem Zeitpunkt verwendet hat.
+Eine kurze Überprüfung der vordefinierten JVM-Werte des Rechners hat jedoch ergeben, dass eine Heap-Größe von zwei Gigabyte zur Verfügung stehen sollte.
+Infolgedessen kann angenommen werden, dass Gradle eigene interne Werte verwendet.
+Eine kurze Websuche hat ergeben, dass diese Annahme korrekt ist.
+Aus der Gradle Deamon Dokumentation kann entnommen werden, dass der Gradle Deamon standardmäßig im Auslieferungszustand eine Heap-Größe von 512 Megabyte besitzt \cite{gradle-memory}.
+Diese Beschränkung kann jedoch leicht umgangen werden, durch die zusätzliche Verwendung einer \texttt{properties.gradle} Datei.
+
+Die \texttt{gradle.properties} Datei, kann verwendet werden, um verschiedene Projektspezifische Konfiguration zu definieren. 
+Statt die unterschiedlichen Optionen bei jeder Ausführung explizit mit anzugeben, ist es leichter diese in der Datei anzugeben.
+Im Folgendem wird der Inhalt, der neu Hinzugefügten \texttt{gradle.properties} aufgelistet:
+
+\begin{figure}[hbt!]
+	\lstinputlisting[firstline=2,lastline=5]{code/generator/gradle.properties}
+\end{figure}
+
+In Zeile 1 wird festgelegt, dass Gradle ohne den Caching Mechanismus verwendet werden soll.
+Zeile 2 gibt an, dass der Startvorgang ohne den Gradle Deamon stattfinden soll, da dieser die Ergebnisse der einzelnen Durchläufe verfälschen könnte.
+In Zeile 3 wird explizit angeben, dass keine parallele Ausführung von Gradle angestoßen werden soll. 
+Eine parallele  Ausführung kann die Performance von Gradle deutlich erhöhen, wird für die Testfälle jedoch nicht verwendet, um akkurate Testergebnisse zu erhalten. 
+Um Argumente an die JVM zu übergeben, wird der Parameter -Xmx4096 in Zeile 4 angegeben, um eine Heapgröße von bis zu 4 Gigabyte zu erlauben. 
+Dadurch wird die 512 Megabyte Schranke von Gradle aufgehoben, um die Kompilierung der größeren Projekte zu ermöglichen.
+
+Ein weiterer Punkt, welcher bei den ersten Durchläufen schnell sichtbar wurde, war die Laufzeit und die CPU Zyklen, welche für die Kompilierung der einzelnen Projekte benötigt wurde.
+Diese beiden Werte waren deutlich höher als erwartet besonders im Vergleich zu Gradle.
+Obwohl diese Werte für Projekte mit wenigen Modulen noch mit Gradle mithalten konnten, wurden diese schnell mit steigender Modulzahl deutlich langsamer.
+Besonders die unerwartet hohen Zyklen-Zahl von \texttt{javac} gegenüber \texttt{gradle build}, war ein Hinweis, dass die Vorgehensweise ungünstig bestimmt wurde.
+
+Nach weiteren Untersuchen wurde folgendes Problem schließlich gefunden: Die lineare Abarbeitung der einzelnen Module in einer Schleife.
+Das JPMS gibt dem Entwickler die Möglichkeit, mehrere Module mit einem einzigen Befehl zu kompilieren.
+Dies wurde hier jedoch nicht verwendet.
+An dieser Stelle wurde neu angesetzt.
+
+\texttt{javac} scheint in Kombination mit mehreren Modulen in der Lage zu sein, intern Optimierungen durchzuführen, welche den Kompilierungsprozesses positiv beeinflussen.
+Diese Optimierungen können bei einer separaten Kompilierung der einzelnen Module nicht ausgenutzt werden.
+Zusätzlich dürfte jede einzelne \texttt{javac} Ausführung einen Start- und End-Overhead aufweisen, der bei zusätzlicher Iteration in einem Gesamt-Overhead resultiert.
+Mit steigender Modulzahl wird dieser Overhead stärker sichtbar.
+In der Summe fallen auch die Schleifeniterationen auf, welche auch bei den Zyklen und Zeit mitgezählt werden.
+Gradle hingegen sollte in der Lage sein intern selbst verschiedene Optimierungen vorzunehmen, sodass z.B. sämtliche Module gemeinsam statt einzeln kompiliert werden.
+
+Um die Theorie zu bestätigen wurde im Benchmark Skript eine Möglichkeit angelegt, sämtliche Module mit einem einzelnen \texttt{javac} Befehl zu kompilieren.
+Das Resultat lieferte wie im weiteren Verlauf der Arbeit sichtbar wird, eindeutige Ergebnisse.
+
+\begin{figure}
+	\includesvg[width=1\columnwidth]{diagrams/proto.svg}
+	\caption{Ergebnis des ersten Versuchsdurchlaufs}
+	\label{fig:proto-result}
+\end{figure}
+
+
+\subsection{Zeitmessungen}
+
+
+\begin{figure}
+	\includesvg[width=1\columnwidth]{diagrams/benchmark/time.svg}
+	\caption{Kompilierzeit}
+	\label{fig:compile-time}
+\end{figure}
+
+Wie in Abbildung \ref{fig:compile-time} zu sehen ist, steigt die Laufzeit bei den drei Ansätzen mit steigender Modulzahl. 
+Überraschend dürfte jedoch die steigende Zeitdifferenz zwischen den Ansätzen sein.
+Bei Projekten mit kleinerer Modulzahl fällt zunächst auf, dass beide \texttt{javac} Varianten deutlich schneller sind, als das Gradle Äquivalent. 
+Mit steigender Modulzahl ist jedoch erkennbar, dass javac von Gradle schnell überholt wird, was etwas überraschend war.
+Gradle erzeugt bei jedem Aufruf zusätzliche Prozesse, um verschiedenen Aufgaben vor dem eigentlichen Build Vorgang abzuarbeiten. 
+Diese benötigen initial zusätzlich Zeit, was bei \texttt{javac} nicht der Fall ist.
+
+Ein so großer Overhead der \texttt{javac} Schleife war unerwartet.
+Beim letzten Projekt mit fünf Kinder und Tiefe vier benötigt dieser Ansatz erstaunlicherweise das sechsfache vom Gradle-Ansatz und ca. das Sechzigfache eines Single-Javac-Ansatzes . 
+Dies zeigt wie ineffizient der erste Ansatz tatsächlich war und wie wichtig es ist, eine gute Testmethodik zu definieren.
+Bei dem Benchmarking mit exponentiell steigender Modulzahl und somit Iterationen ist zu erwarten das ein existierender Overhead ebenfalls exponentiell mitwächst und somit einen stärkeren Einfluss auf Messungen besitzt. 
+
+\subsection{Arbeitsspeicherverbrauch}
+
+\begin{figure}
+	\includesvg[width=1\columnwidth]{diagrams/benchmark/memory.svg}
+	\caption{Kompilierung Speicherverbrauch}
+	\label{fig:compile-memory}
+\end{figure}
+
+Abbildung \ref{fig:compile-memory} zeigt den Speicherverbrauch der drei Ansätze.
+Hier wird zunächst ein großer Vorteil der javac Schleife gegenüber den anderen Ansätzen sichtbar.
+Die Schleife besitzt über die gesamte Dauer der Kompilierung aller Projekte einen konstanten Speicherbedarf.
+Grundsätzlich sind hier keine größeren Schwankungen zu beobachten.
+Fast alle Messungen liegen in einem kleinen, konstanten Intervall von zirka 50 Megabyte.
+Das beobachtete Verhalten ist dadurch zu erklären, dass jedes Modul einzeln nacheinander kompiliert wird und diese sich sowohl im Aufbau als auch im Inhalt einander stark ähneln.
+%TODO speicherfreigabe falls nicht bereits erwähnt
+
+Bei der Kompilierung mit \texttt{gradle build} sind gegenüber dem Single-java-Ansatz starke Schwankungen im Speicherverbrauch sichtbar.
+Gradle benötigt deutlich mehr Arbeitsspeicher für die Kompilierung als die \texttt{javac} Varianten.
+Ein Großteil des Arbeitsspeicherverbrauchs, besonders bei den kleineren Projekten, dürften auch hier auf Gradle selbst und den verschiedenen Prozessen die es erzeugt zurückzuführen sein.
+Die plötzliche Speicherreduzierung, die am Ende jedes \texttt{gradle build} auftreten sind, sind auf den in der \texttt{gradle.properties} abgeschalteten Daemon zurückzuführen.
+Nach jedem Gradle-Befehl wird der Daemon dadurch samt der zugehörigen Prozesse beendet und somit Speicher freigegeben.
+Würde diese Option nicht verwendet, so würde Speicherverbrauch stetig steigen, denn der erste Daemon würde für die nachfolgende Projekte verwendet werden. Dies würde sich jedoch in den Zeitmessungen positiv widerspiegeln. 
+Dies ist jedoch unerwünscht, da sämtliche Projekte unabhängig voneinander betrachten werden sollten.
+
+%Weiterhin ist die Entwicklung des Speicherverbrauchs in Gradle mit steigender Modulzahl auffällig.
+%Der Arbeitsspeicherverbrauch scheint sich parallel mit steigender Modulanzahl zu erhöhen.
+%Im Projekt scheint eine obere Schranke erreicht worden zu sein.
+%Während sich bei den vorherigen Projekten der Speicherverbrauch langsam nach der Initialisierungsphase erhöht, flacht dieser im letzten Durchlauf schnell ab.
+%Hinzu kommt, dass Gradle die Kompilierung dieses Projekt nicht erfolgreich abschließen konnte. Stattdessen resultierte eine Benachrichtigung, dass der Heap-Speicher voll ausgelastet sei.
+%Aus diesem Ergebnis kann geschlussfolgert werden, dass Gradle eine interne Schranke besitzt, welche den Speicherverbrauch einschränkt.
+%Diese Annahme schien sich nach einer kurzen Überprüfung der auf dem Rechner erlaubten Java-Heapgröße zu bestätigen.
+%Die voreingestellte,  maximal erlaubte Heap-Größe auf dem Rechner beträgt 4 Gigabyte, Gradle scheint lediglich um die 500 Megabyte vor dem Abbruch des Kompiliervorgangs zu verbrauchen.
+
+
+\subsection {CPU-Zyklen}
+
+\begin{figure} [t!]
+	\includesvg[width=1\columnwidth]{diagrams/benchmark/cycles.svg}
+	\caption{CPU Zyklen - Kompilierung}
+\end{figure}
+
+Anfangs benötigt \texttt{javac} deutlich weniger CPU-Zyklen als \texttt{gradle build}.
+Die Anzahl der Zyklen steigt jedoch mit steigender Modulzahl schnell an.
+Grundsätzlich scheint die Zahl der Zyklen in \texttt{javac} fast linear mit der Modulanzahl zu wachsen.
+%TODO Aussage nochmal überprüfen
+
+Gradle wiederum benötigt lediglich anfangs mehr Zyklen.
+Unerwartet ist jedoch, dass die Anzahl der Zyklen in der \texttt{javac} Variante schnell die Zahl von Gradle zu überholen scheint.
+
+Der anfängliche Overhead bei Gradle dürfte wieder durch die Hintergrundprozesse, die ausgeführt werden zu erklären sein.
+Die Performance-Steigerung gegenüber \texttt{javac} scheint mit steigender Modulzahl hingegen zunächst fragwürdig. Besonders, da keine weiteren Prozesse generiert werden sollten.
+Nach genauere Betrachtung wurde eine mögliche Begründung festgestellt.
+Eine Erste Annahme ist, dass der verwendete Kompilier-Vorgang mit \texttt{javac} ungeeignet ist. 
+Es ist möglich, mehrere JPMS Module gemeinsam zu kompilieren. 
+Diese Variante wird jedoch beim verwendeten Kompiliervorgang nicht genutzt, stattdessen wird jedes Modul einzeln kompiliert.
+Es kann jedoch sein, dass bei der Kompilierung mehrerer Module mit javac intern verschiedene Optimierungen durchgeführt werden, um den Prozess zu beschleunigen. 
+Durch das Aufteilen geht die Möglichkeit diese Optimierungen einzusetzen verloren. 
+Hinzu kommt, dass nicht nur die Zyklen von \texttt{javac} gemessen, sondern auch die Zyklen der umliegenden Logik mitgezählt werden und das für jedes einzelne Modul. 
+Dies dürfte die Zahl der Zyklen in der Java Variante ebenfalls aufblähen.
+
+
+\subsection{Ausführung}
+In den vorangehenden Abschnitten wurden Zeit, Arbeitsspeicher und CPU-Zyklen für den Kompilierprozess betrachtet.
+Die genauere Beschreibung der Ausführung entfällt an dieser Stelle.
+Diese muss nicht kleinschrittig betrachtet werden, da bei der Ausführung in allen Varianten sehr ähnlicher Bytecode generiert wird, welcher von der JVM ausgeführt wird.
+Lediglich anzumerken bleibt, dass die Ausführung mit \texttt{java} weniger Speicher verbraucht. 
+Gradle wiederum benötigt deutlich mehr Speicher und Zeit.
+Dies lässt sich durch die zusätzlichen Subroutinen, welche bei der Ausführung mittels \texttt{gradle run} gestartet werden, erklären.
+
+
+\subsection{Schlussfolgerung}
+
+Das Messen der Performance ist ein großer Bereich der Informatik und trägt dazu bei Software stetig zu verbessern.
+In diesem Kapitel wurde die Performance von Kompliervorgängen seitens Gradle gemessen und den klassischen Ansätzen gegenüber gestellt.
+Gradle ist mittlerweile allgegenwärtig. Es gilt als der heilige Gral der Java-Welt und wird in vielen Java basierten Projekten wie Android, Elastic, etc. verwendet. Auch viele bekannte Unternehmen benutzen Gradle zur Build Automatisierung (Netflix, Adobe, LinkedIn).
+An dieser Stelle stellt sich die Frage, ob die Verwendung von Gradle in jeder Hinsicht sinnvoll ist, oder ob es Situationen gibt, bei denen die klassischen Ansätze wesentlich performanter sind.
+Dazu wurde das im vorherigen Kapitel (ref) vorgestellte Projekt verwendet, um eine Reihe von JPMS Testprojekten zu erstellen, die jeweils mit Gradle und manuell mit \texttt{javac} kompiliert wurden. Gleichzeitig wurde damit überprüft, ob das Java Modul System bei der Auflösung von Modulabhängigkeiten mit einer unrealistisch hohen Anzahl von Modulen an seine Grenzen stößt.
+Dabei sind folgende Schlussfolgerungen zustande gekommen:
+
+Die Testergebnisse weisen vor, dass der manuelle Ansatz im Vergleich zu Gradle deutlich besser abschneiden kann, besonders dann, wenn der Fokus auf Performance liegt oder die Ressourcen limitiert sind.
+Dem manuellen Ansatz obliegen jedoch einige Fehlerquellen, sodass bei ungünstiger Implementierung schnell schlechte Ergebnisse resultieren. 
+Eine Situation eines schlecht gewählten Ansatzes ist in Abbildung \ref{fig:compile-time} im oberen Diagramm zu erkennen. Dort wurde jedes Java Modul in einer Schleife einzeln kompiliert.
+Die Vorteile die Gradle bietet, sind jedoch nicht zu vernachlässigen.
+Die Verwendung von Gradle ist deutlich leichter anstatt manuelle Ansätze zu verwenden. Außerdem liegt der Ursprung von Gradle in genau solchen Situationen von vielen, eigens erstellten Skripten zur Automatisierung des Erstellungsvorgangs.
+Das zweite Diagramm in Abbildung \ref{fig:compile-time} zeigt den schnelleren manuellen Ansatz mit \texttt{javac}. Um einen Weg zu finden, der den ersten Ansatz verbessert, sind jedoch bereits fortgeschrittene Kenntnisse der dahinter stehenden Technologie erforderlich. Dies erforderte zunächst einen höheren initialen Aufwand.
+
+Allgemein liegt in diesem Kapitel ein im weiteren Sinne unfairer Vergleich vor.
+Der Fokus lag eindeutig auf der Performanten Durchführung der Kompilierungsvorgänge. Dies ist für Gradle generell eher ungeeignet, denn dort steht die Benutzerfreundlichkeit im Vordergrund mit einem potenziellen Verlust von Performance. 
+Außerdem wurden die Testprojekte im Ausgangszustand betrachtet. Die Möglichkeit von Gradle inkrementelle Erstellungsprozesse durchzuführen, z.B. durch die Zwischenspeicherung von Vorgängen (Caching) zur Beschleunigung dieser, treten dadurch nicht in Kraft. 
+Hinzu kommt, dass die einzelnen Testprojekte separat betrachtet wurden. Dafür wurde der Daemon abgeschaltet, um die Ergebnisse ab dem zweiten Kompilierungsvorgang nicht zu verfälschen. Das führt dazu, das zunächst bei jedem \texttt{gradle build} ein vergleichsweise hoher Initialaufwand benötigt wird. Das Einschalten des Daemons würde die Performance an dieser Stelle verbessern können.
+
+Was das Java Modulsystem betrifft, treten grundsätzlich keine Probleme auf. Abhängigkeiten wurden bei einer Modulanzahl von bis zu 3906 ohne weiteres aufgelöst. Die Module sind allerdings sehr simpel gehalten. Ein einzelnes Modul weist nur einen geringfügigen Speicherverbrauch auf. Steigt die Größe der einzelnen Module, wird auch der gesamte Speicherverbrauch im schlimmsten Fall exponentiell steigen.

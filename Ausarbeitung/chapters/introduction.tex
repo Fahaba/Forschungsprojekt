@@ -1,0 +1,33 @@
+% !TeX spellcheck = de_DE
+
+\section{Einleitung}
+
+Buildsysteme sind ein zentraler Bestandteil in der modernen Softwareentwicklung und unverzichtbar in der Automatisierung und Optimierung von Entwicklungspipelines.
+Eines der in der Java-Welt stark verbreitetes Buildsystem, das im Verlauf dieser Arbeit untersucht wird, ist das Buildsystem Gradle.
+Eines der Kernziele dieser Arbeit ist die Auseinandersetzung mit diesem System, um einen Überblick über die internen Abläufe und Prozesse von Gradle zu bekommen.
+Der Anspruch für eine interessante Gestaltung der Vorgehensweise war jedoch, dass zunächst keine detaillierte Einarbeitung in Gradle erfolgen sollte.
+Dies bedeutet, dass sowohl keine direkte Einsicht in den Quellcode von Gradle oder in tief greifende Fachbücher erfolgen sollte.
+Die Begründung für diesen Ansatz ist im zweiten Kernthema dieser Arbeit - Groovy - vorzufinden.
+
+Groovy ist eine in der Java-Welt ansässige, auf der JVM laufende Programmiersprache, welche einige interessante Eigenschaften aufweist.
+Die wohl interessanteste Besonderheit von Groovy dürfte jedoch die leicht zu verwendende Fähigkeit der Metaprogrammierung sein.
+Metaprogrammierung ist eine Programmiertechnik, bei der eine erstellte Anwendung in der Lage ist, andere Anwendungen als eigene Daten zu behandeln, um diese Anwendungen infolgedessen manipulieren zu können.
+Im Zusammenhang mit Gradle ist Groovy besonders interessant, da angenommen wurde, dass ein Großteil von Gradle in Groovy implementiert ist.
+Weiterhin handelt es sich bei den in Gradle verwendeten Build-Skripten um nichts anderes als Groovy Code.
+Aus den oberen Punkten kann geschlossen werden, dass es evtl. möglich sein sollte, Groovy's Metaprogrammierungs-Fähigkeiten auszunutzen, um Informationen über die internen Prozesse von Gradle zu gewinnen.
+Genau darin lag die Zielsetzung dieser Arbeit.
+
+Als Zusatz wird ebenfalls das JPMS, welches Module in der Java-Welt realisiert, untersucht.
+Diese kommen in einem Anwendungsbeispiel, um Gradles Performance zu testen, zum Einsatz.
+Genauer werden Multi-Modul-JPMS Projekte mit einer hohen Anzahl von Modulabhängigkeiten erstellt.
+Diese werden anschließend verwendet, um herauszufinden, wie gut Gradle mit einer hohen Anzahl an Projekten zurechtkommt.
+Gleichzeitig kann untersucht werden, ob das JPMS evtl. Probleme im Umgang mit vielen Modulabhängigkeiten hat.
+
+Diese Arbeit ist folgendermaßen aufgebaut:
+In Kapitel \ref{ch-groovy} erfolgt eine kurze Einleitung in die Groovy-Programmiersprache.
+Daraufhin wird in Kapitel \ref{ch-gradle} das Gradle-Buildsystem und dessen Vorgänger vorgestellt und kurz erläutert, warum Gradle meistens die bessere Alternative darstellt.
+Eine Einsicht in das Java-Modulsystem stellt Kapitel \ref{ch-jpms} dar.
+In Kapitel \ref{ch-generator} beginnt schließlich der praktische Teil dieser Arbeit. Hier wird der in Groovy implementierte Generator zur Erstellung von Multimodul-JPMS Projekten vorgestellt.
+Im darauffolgenden Kapitel \ref{ch-metaprog} wird analysiert, ob es möglich ist, Groovys Metaprogammierung zu verwenden, um Informationen aus Gradle zu extrahieren.
+Die Performance von Gradle wird in Kapitel \ref{ch-benchmark} analysiert.
+Das Schlusslicht bildet das Kapitel \ref{ch-outlook}, in dem ein Ausblick und der Nutzen dieses Projekts aufgezeigt wird und eventuelle Verbesserungen offengelegt werden.

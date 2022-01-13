@@ -1,0 +1,37 @@
+
+---  Intercepting jmaster.JavaMaster class  ---
+
+---  PROX    CAL: createPainting -> [Guernica][1937]
+Pablo Picasso create a new painting.
+---  PROX    RES: createPainting <- [null]
+---  PROX    CAL: createSculpture -> [Bull's Head][1942][45]
+Pablo Picasso create a new Sculpture.
+---  PROX    RES: createSculpture <- [null]
+---  PROX    CAL: printArt -> 
+The PAINTING named Guernica was created by Pablo Picasso in 1937.
+The SCULPTURE named Bull's Head was created by Pablo Picasso in 1942, it has an height of 45cm.
+---  PROX    RES: printArt <- [null]
+---  PROX    CAL: getClass -> 
+---  PROX    RES: getClass <- [class jmaster.JavaMaster]
+---  PROX    CAL: greetings -> 
+---  PROX    RES: greetings <- [Greetings form an Java Arts Association!]
+---  PROX    CAL: ctor -> [Leonardo da Vinci]
+---  PROX    RES: ctor <- [jmaster.JavaMaster@776a6d9b]
+---  PROX    CAL: createPainting -> [Mona Lisa][1505]
+Leonardo da Vinci create a new painting.
+---  PROX    RES: createPainting <- [null]
+---  PROX    CAL: createSculpture -> [The Virgin and the Laughing Child][1472][50]
+Leonardo da Vinci create a new Sculpture.
+---  PROX    RES: createSculpture <- [null]
+---  PROX    CAL: createPainting -> [The Last Supper][1498]
+Leonardo da Vinci create a new painting.
+---  PROX    RES: createPainting <- [null]
+---  PROX    CAL: printArt -> 
+The PAINTING named Mona Lisa was created by Leonardo da Vinci in 1505.
+The SCULPTURE named The Virgin and the Laughing Child was created by Leonardo da Vinci in 1472, it has an height of 50cm.
+The PAINTING named The Last Supper was created by Leonardo da Vinci in 1498.
+---  PROX    RES: printArt <- [null]
+---  PROX    CAL: getClass -> 
+---  PROX    RES: getClass <- [class jmaster.JavaMaster]
+---  PROX    CAL: greetings -> 
+---  PROX    RES: greetings <- [Greetings form an Java Arts Association!]

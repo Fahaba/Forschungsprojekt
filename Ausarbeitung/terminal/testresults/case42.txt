@@ -1,0 +1,39 @@
+
+---  Creating Artist: Picasso  ---
+
+Pablo Picasso create a new painting.
+Pablo Picasso create a new Sculpture.
+The PAINTING named Guernica was created by Pablo Picasso in 1937.
+The SCULPTURE named Bull's Head was created by Pablo Picasso in 1942, it has an height of 45cm.
+
+---  Expanding jmaster.JavaMaster class  ---
+
+---  EXPA    CAL: printArt -> []
+The PAINTING named Guernica was created by Pablo Picasso in 1937.
+The SCULPTURE named Bull's Head was created by Pablo Picasso in 1942, it has an height of 45cm.
+---  EXPA    RES: printArt <- null
+---  EXPA    CAL: getClass -> []
+---  EXPA    RES: getClass <- class jmaster.JavaMaster
+---  EXPA  STCAL: greetings -> []
+---  EXPA  STRES: Greetings form an Java Arts Association!
+
+---  Creating Artist: Da Vinci  ---
+
+---  EXPA    CAL: createPainting -> [Mona Lisa, 1505]
+Leonardo da Vinci create a new painting.
+---  EXPA    RES: createPainting <- null
+---  EXPA    CAL: createSculpture -> [The Virgin and the Laughing Child, 1472, 50]
+Leonardo da Vinci create a new Sculpture.
+---  EXPA    RES: createSculpture <- null
+---  EXPA    CAL: createPainting -> [The Last Supper, 1498]
+Leonardo da Vinci create a new painting.
+---  EXPA    RES: createPainting <- null
+---  EXPA    CAL: printArt -> []
+The PAINTING named Mona Lisa was created by Leonardo da Vinci in 1505.
+The SCULPTURE named The Virgin and the Laughing Child was created by Leonardo da Vinci in 1472, it has an height of 50cm.
+The PAINTING named The Last Supper was created by Leonardo da Vinci in 1498.
+---  EXPA    RES: printArt <- null
+---  EXPA    CAL: getClass -> []
+---  EXPA    RES: getClass <- class jmaster.JavaMaster
+---  EXPA  STCAL: greetings -> []
+---  EXPA  STRES: Greetings form an Java Ar
