@@ -103,8 +103,8 @@ In dieser Datei werden folgende Eigenschaften festgelegt:
 Als Beispiel werden in Abbildung \ref{fig:mod1-info} und \ref{fig:mod2-info} zwei Modul-Deskriptor-Dateien angegeben, welche in den nachfolgenden Abschnitten genauer erläutert werden.
 
 
-\begin{figure}
-\begin{lstlisting}[language=java]
+\begin{figure}[h!]
+\begin{lstlisting}[frame=none, language=java]
 module com.module1 {
 exports com.module1 to com.module0;
 exports com.module1.package1 to com.module2;
@@ -120,8 +120,8 @@ opens com.module1 to com.module0;
 \end{figure}
 
 
-\begin{figure}
-\begin{lstlisting}[language=java]
+\begin{figure}[h!]
+\begin{lstlisting}[frame=none, language=java]
 module com.module1 {
 	exports com.module1 to com.module0;
 	exports com.module1.package1 to com.module2;
@@ -214,7 +214,7 @@ Interface und Implementierung befinden sich im Normalfall in separaten Modulen, 
 
 
 \begin{figure}[hbt!]
-\begin{lstlisting}[language = java, firstnumber = 1 ,]
+\begin{lstlisting}[frame=none, language = java, firstnumber = 1 ,]
 module service.implementation {
 	requires module.service;
 	provides module.service.Service with service.implmentation.MyImplementation;
@@ -232,7 +232,7 @@ Im obigen Beispiel wird eine Implementierung für das \texttt{module.service.Ser
 
 
 \begin{figure}[hbt!]
-\begin{lstlisting}[language = java, firstnumber = 1 , escapeinside={(*@}{@*)}]
+\begin{lstlisting}[frame=none, language = java, firstnumber = 1 , escapeinside={(*@}{@*)}]
 module service.user {
 	requires module.service;
 	uses module.service.Service;

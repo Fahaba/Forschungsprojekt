@@ -13,7 +13,7 @@ Abbildung  \ref{fig:GlobalAst-visit} demonstriert den groben Aufbau der AST-Tran
 
 
 \begin{figure}[hbt!]
-	\lstinputlisting[language=java, linerange={19-28}, firstnumber=19]{code/ast-transformation/MyGlobalASTTransformation.groovy}
+	\lstinputlisting[frame=none, language=java, linerange={19-28}, firstnumber=19]{code/ast-transformation/MyGlobalASTTransformation.groovy}
 	\caption{Grundgerüst zum Abfangen der AST-Knoten}
 	\label{fig:GlobalAst-visit}
 \end{figure}
@@ -51,7 +51,7 @@ Dafür wurde eine Methode \texttt{recursiveTraverse()} definiert, die als Argume
 
 
 \begin{figure}[hbt!]
-	\lstinputlisting[language=java, linerange={30-56}, firstnumber=30]{code/ast-transformation/MyGlobalASTTransformation.groovy}
+	\lstinputlisting[frame=none, language=java, linerange={30-56}, firstnumber=30]{code/ast-transformation/MyGlobalASTTransformation.groovy}
 	\caption{\texttt{recursiveTraverse} Methode zur Einbindung zusätzlichen Logik}
 	\label{fig:GlobalAst-recursiveTraverse}
 \end{figure}
@@ -61,11 +61,11 @@ Wie im Namen der Methode zu sehen, wird diese an bestimmten Punkten rekursiv ver
 
 Jede rekursiv definierte Methode muss einen Anker besitzen, um keine Endlosschleife zu produzieren. Der Anker für die Methode \texttt{recursiveTraverse()} beginnt in Zeile 40. Wenn das gerade betrachtete Argument vom Typ \texttt{MethodNode} ist, also eine Methode im AST-Baum repräsentiert, wird die folgende Logik ausgeführt:
 
-Ein \texttt{Statement} Objekt wird in Zeile 42 erstellt, welches eine Instanz der Klasse \texttt{ExpressionStatement} ist. 
+Ein \texttt{Statement} Objekt wird in Zeile 42 erstellt, welches eine Instanz der Klasse \\ \texttt{ExpressionStatement} ist. 
 Dieses erwartet als Parameter wiederum ein Objekt des Typs \texttt{Expression}. 
 \texttt{Expression} Objekte können mehr oder weniger frei definiert werden.
 Im abgebildeten Fall soll ein Methodenaufruf erzeugt werden. 
-Im Konstruktor von \texttt{MethodCallExpression} werden drei Dokumente erwartet. 
+Im Konstruktor von \\ \texttt{MethodCallExpression} werden drei Dokumente erwartet. 
 Das erste ist wieder ein Objekt des Typs \texttt{Expression} und stellt die Klasse bzw. das Objekt dar, auf dem die Methode ausgeführt werden soll. 
 In Zeile 44 wird dafür die Variable \texttt{this} im aktuellen Kontext der betrachteten Methode verwendet. 
 Da die Variable \texttt{this} zum Zeitpunkt der Erstellung der AST-Transformation auf die Klasse \texttt{MyGobalASTTransformation} verweist, kann diese nicht einfach als Parameter verwendet werden. 
@@ -79,7 +79,7 @@ Analog zur \texttt{VariableExpression} funktioniert dies über die Klasse \textt
 Der Methodenname wird als Parameter übergeben. Da weiterhin das Ausgeben von zusätzlichen Informationen über den aktuell betrachteten Kontext von Methoden und Klassen das Ziel in diesem Versuch bleibt, bietet sich hierfür die Methode \texttt{println} an. 
 Diese ist in jedem Kontext erreichbar und ausführbar. 
 
-Der dritte Parameter von \texttt{MethodCallExpression} ist ein \texttt{Expression} Objekt, das die Argumente widerspiegelt, die in der aufzurufenden Methode verwendet werden. \texttt{ArgumentListExpression} kann hier verwendet werden, um diese Parameter in das passende Objekt umzuwandeln. \texttt{ArgumentListExpression} verlangt ein Expression Objekt. 
+Der dritte Parameter von \texttt{MethodCallExpression} ist ein \texttt{Expression} Objekt, das die Argumente widerspiegelt, die in der aufzurufenden Methode verwendet werden. \\ \texttt{ArgumentListExpression} kann hier verwendet werden, um diese Parameter in das passende Objekt umzuwandeln. \texttt{ArgumentListExpression} verlangt ein Expression Objekt. 
 Da ein String ausgegeben werden soll, wurde dafür die in der Rekursion aktuell betrachtete Methode gewählt und mit \texttt{toString()} zu Testzwecken in eine Zeichenkette umgewandelt. 
 Diese wird durch die schon bevor erwähnte Klasse \texttt{ConstantExpression} der \texttt{ArgumentListExpression} weitergereicht.
 
@@ -93,7 +93,7 @@ Letztendlich werden dadurch alle erreichbaren Methoden Knoten im AST-Baum verän
 
 %TODO Überarbeiten
 Wie bereits von Groovy erwartet ist die Erstellung einer AST-Transformation relativ simpel im Vergleich zur klassischen ByteCode Manipulation in Java.
-Weniger als 60 Zeilen Quellcode inklusive der Einbindung von Paketen sind nicht sehr umfangreich in Anbetracht der komplexen Logik, die im Hintergrund abläuft.
+Weniger als 60 Zeilen Quellcode inklusive der Einbindung von Paketen sind nicht sehr umfangreich in Anbetracht der komplexen Logik, die im Hintergrund abläuft. \pagebreak
 
 
 \subsubsection{Ausführung der AST Transformation}
@@ -108,7 +108,7 @@ An dieser Stelle wird ein Testprogramm benötigt, auf dem die AST-Transformation
 Abbildung \ref{fig:Greeter} skizziert das verwendete Testprogramm.
 
 \begin{figure}[hbt!]
-	\lstinputlisting[language=java]{code/ast-transformation/Greeter.groovy}
+	\lstinputlisting[frame=none, language=java]{code/ast-transformation/Greeter.groovy}
 	\caption{Testklasse für die AST-Transformation}
 	\label{fig:Greeter}
 \end{figure}
@@ -124,13 +124,13 @@ Diese zwei Klassen sind sehr gut für den nächsten Versuch geeignet, da Aufrufe
 Die erstellte AST-Transformation, die nun in Form einer \texttt{.jar}-Datei vorliegt, wird nun zusammen mit dem Greeter Programm verwendet. 
 Der Aufruf erfolgt über die Kommandozeile und ist, unter der Annahme, dass sich die Jar-Datei und die Greeter Klasse im selben Verzeichnis befinden, wie folgt definiert:
 
-\begin{lstlisting}
+\begin{lstlisting}[frame=none]
 groovy -cp .\groovy-ast-transformation.jar .\Greeter.groovy
 \end{lstlisting}
 
-Im Normalfall produziert die Greeter Klasse folgende Ausgabe:
+Im Normalfall produziert die Greeter-Klasse folgende Ausgabe:
 
-\begin{lstlisting}
+\begin{lstlisting}[frame=none]
 Hello from the greet() method!
 Hello from the greet2() method!
 Hallo
@@ -141,7 +141,7 @@ Hallo
 Folgende Abbildung zeigt die veränderte bzw. zusätzliche Ausgabe die mithilfe des obigen Befehls produziert wird:
 
 
-\begin{lstlisting}
+\begin{lstlisting}[frame=none]
 MethodNode@1017953[Greeter#void main(java.lang.String[])]
 Hello from the greet() method!
 MethodNode@1405577[Greeter2#void test()]

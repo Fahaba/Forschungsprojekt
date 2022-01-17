@@ -36,7 +36,7 @@ Neue Funktionalitäten in der Groovy Syntax bieten:
 
 
 \begin{figure} [hbt]
-\begin{lstlisting}[language = Java , firstnumber = 1 , escapeinside={(*@}{@*)}]
+\begin{lstlisting}[frame=none, language = Java , firstnumber = 1 , escapeinside={(*@}{@*)}]
 Buy(best).of(stocks)  // Java und in Groovy
 Buy best of stocks;   // Groovy
 \end{lstlisting}
@@ -118,7 +118,7 @@ In folgendem Beispiel wird dies klarer:
 
 
 \begin{figure}[hbt!]
-\begin{lstlisting}[language = Java, firstnumber = 1 , escapeinside={(*@}{@*)}]
+\begin{lstlisting}[frame=none, language = Java, firstnumber = 1 , escapeinside={(*@}{@*)}]
 class Main {
 	public static void main(String[] argv) {
 		Object x = 1;
@@ -148,7 +148,7 @@ Bei Groovy passiert die Auswertung der Parametertypen erst zur Laufzeit, womit s
 
 
 \begin{figure}[hbt!]
-\begin{lstlisting}[language = Java , firstnumber = 1 , escapeinside={(*@}{@*)}]
+\begin{lstlisting}[frame=none, language = Java , firstnumber = 1 , escapeinside={(*@}{@*)}]
 def multi(String s) { return "Runtime param type: string" }
 def multi(Object o) { return "Runtime param type: object" }
 
@@ -206,7 +206,7 @@ Anwendungsgebiete hierfür sind:
 \end{itemize}
 
 Ein wichtiger Punkt zur Dynamisierung ist folgender, dass die Metaklassen sogar ganz ausgetauscht werden können.
-Alle Groovy Objekte implementieren die Methoden \texttt{getMetaClass()} und \texttt{setMetaClass()}. 
+Alle Groovy Objekte implementieren die Methoden\\ \texttt{getMetaClass()} und \texttt{setMetaClass()}. 
 Die Standardimplementierung befindet sich in der \textit{MetaClassRegistry}. 
 Objekte, die nicht von GroovyObject erben, werden direkt über die \textit{MetaClassRegistry} aufgerufen, können also ohne weiteres nicht verändert werden. 
 

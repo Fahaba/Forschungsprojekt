@@ -20,7 +20,7 @@ Zwei Parameter werden hierbei unterschieden und sind wie folgt benannt:
 Nachfolgend werden die Module mithilfe der in Abbildung \ref{fig:createModules} dargestellten Methode \texttt{createModules(int nodeCount, int childCount)} generiert.
 
 \begin{figure} [hbt!]
-	\lstinputlisting[language=java, firstline=182, lastline=29, firstnumber=182 ]{code/Generator/Generator.groovy}
+	\lstinputlisting[frame=none, language=java, firstline=182, lastline=29, firstnumber=182 ]{code/Generator/Generator.groovy}
 	\caption{\texttt{createModules} Methode}
 	\label{fig:createModules}
 \end{figure}
@@ -28,7 +28,7 @@ Nachfolgend werden die Module mithilfe der in Abbildung \ref{fig:createModules} 
 
 \begin{figure} [hbt!]
 	\begin{subfigure}{\textwidth}
-		\begin{lstlisting}
+		\begin{lstlisting}[frame=none]
 			(0..depth).each {
 				nodeCount += Math.pow(children, it)
 			}
@@ -38,9 +38,9 @@ Nachfolgend werden die Module mithilfe der in Abbildung \ref{fig:createModules} 
 	\end{subfigure}
 
 	\begin{subfigure}{\textwidth}
-		\begin{framed}
+		
 			\[ \exists d, c, k \in \mathbb{N}: \sum_{i=0}^{d} c^{i} = k = Knotenzahl \]
-		\end{framed}
+		
 
 		\caption{Mathematische Form}
 		\label{fig:gen-module-formula}
@@ -81,12 +81,12 @@ Die zu übergebenden Parameter dafür wurden bereits analog zu Abbildung \ref{fi
 In dieser Methode, welche in Abbildung \ref{fig:createModule} dargestellt ist, wird der eigentliche Quellcode des jeweiligen Java Moduls erzeugt.
 
 \begin{figure} [b!]
-	\lstinputlisting[language=java, firstline=109, lastline=147, firstnumber=109 ]{code/Generator/Generator.groovy}
+	\lstinputlisting[frame=none, language=java, firstline=109, lastline=147, firstnumber=109 ]{code/Generator/Generator.groovy}
 	\caption{\texttt{createModule} Methode Teil 1}
 \end{figure}
 
 \begin{figure} [t!] \ContinuedFloat
-	\lstinputlisting[language=java, firstline=148, lastline=175, firstnumber=148 ]{code/Generator/Generator.groovy}
+	\lstinputlisting[frame=none, language=java, firstline=148, lastline=175, firstnumber=148 ]{code/Generator/Generator.groovy}
 	\caption{\texttt{createModule} Methode Teil 2}
 	\label{fig:createModule}
 \end{figure}

@@ -134,7 +134,7 @@ Um dem Root-Projekt zusätzliche Unterprojekte beizufügen, müssen diese ledigl
 
 
 \begin{figure}[hbt!]
-\begin{lstlisting}[language=groovy]
+\begin{lstlisting}[frame=none, language=groovy]
 rootProject.name = 'MetaTester'
 include 'GroovyMaster'
 include 'JavaMaster'
@@ -188,7 +188,7 @@ Demnach wurde \texttt{ArtType} in dieser in der \texttt{Art.groovy} Datei hinter
 \end{figure}
 
 
-In dieser Testreihe soll das Verhalten von Gradle mithilfe der bereits erwähnten \texttt{ProxyMetaClass} manipuliert werden.
+In dieser Testreihe soll das Verhalten von Gradle mithilfe der bereits erwähnten \\ \texttt{ProxyMetaClass} manipuliert werden.
 Bevor diese Variante direkt in Verbindung mit Gradle verwendet wird, werden Proxy Metaklassen im MetaTester Projekt getestet. 
 Die Proxy-Metaklasse funktioniert ähnlich wie ein \textit{Decorator Pattern}, da es dynamisches Hinzufügen und Entfernen von Funktionalität zur Laufzeit ermöglicht.
 Um diese Klasse verwendet zu können, ist die Erstellung eines Interceptors nötig, der das \texttt{Interceptor} Interface einbindet. 
@@ -208,7 +208,7 @@ Ein erster, einfacher Ansatz Information über interne Prozesse zu erhalten, ist
 Um dies zu realisieren, wurde der in Abbildung \ref{fig:CallInterceptor.groovy} zu sehende Interceptor erstellt.
 
 \begin{figure}[hbt!]
-	\lstinputlisting[language=groovy] {code/CallInterceptor.groovy}
+	\lstinputlisting[frame=none, language=groovy] {code/CallInterceptor.groovy}
 	\caption{\texttt{CallIntercepter.groovy}}
 	\label{fig:CallInterceptor.groovy}
 \end{figure}
@@ -221,7 +221,7 @@ Folgende in Abbildung \ref{fig:MetaTester-proxySample} dargestellte Methode wurd
 
 
 \begin{figure}[hbt!]
-	\lstinputlisting[language=groovy, linerange={43-64}, firstnumber=43]{code/MetaTester.groovy}
+	\lstinputlisting[frame=none, language=groovy, linerange={43-64}, firstnumber=43]{code/MetaTester.groovy}
 	\caption{\texttt{proxySample} Methode}
 	\label{fig:MetaTester-proxySample}
 \end{figure}
@@ -254,7 +254,7 @@ Um Redundanz zu vermeiden wurde die \texttt{helper} Hilfsmethode  erstellt, dess
 
 
 \begin{figure}[hbt!]
-	\lstinputlisting[language=groovy, linerange={108-116}, firstnumber=108]{code/MetaTester.groovy}
+	\lstinputlisting[frame=none, language=groovy, linerange={108-116}, firstnumber=108]{code/MetaTester.groovy}
 		\caption{\texttt{helper} Hilfsmethode}
 	\label{fig:MetaTester-helper}
 \end{figure}
@@ -275,7 +275,7 @@ Um die gelisteten Tests durchführen, wird nur die oben definierte \texttt{proxy
 Einzig die Klasse, dessen Aufrufe abgefangen werden soll, muss angepasst werden. 
 
 \begin{figure}[hbt!]
-	\lstinputlisting[language=groovy, linerange={25-30}, firstnumber=25]{code/MetaTester.groovy}
+	\lstinputlisting[frame=none, language=groovy, linerange={25-30}, firstnumber=25]{code/MetaTester.groovy}
 	\caption{Die Sechs ProxyMetaklassen Testfälle}
 	\label{fig:MetaTester-Proxy-Cases}
 \end{figure}
@@ -290,15 +290,15 @@ Fall 11 und 12 sind für die direkte Verwendung der Klassen definiert, 21 und 22
 
 
 
-\begin{figure}[t!]
+\begin{figure}[h!]
 	\begin{subfigure}{\textwidth}
-		\lstinputlisting[, linerange={2-14}, firstnumber=2]{terminal/testresults/case11.txt}
+		\lstinputlisting[frame=none, linerange={2-14}, firstnumber=2]{terminal/testresults/case11.txt}
 		\caption{Groovy Ausgabe}
 		\label{fig:proxres-direct-groovy}
 	\end{subfigure}
 
 	\begin{subfigure}{\textwidth}
-		\lstinputlisting[, linerange={2-22}, firstnumber=2]{terminal/testresults/case12.txt}
+		\lstinputlisting[frame=none, linerange={2-22}, firstnumber=2]{terminal/testresults/case12.txt}
 		\caption{Java Ausgabe}
 		\label{fig:proxres-direct-java}
 	\end{subfigure}
@@ -326,13 +326,13 @@ Es scheint, dass Aufrufe sämtlicher Instanzen der Klasse innerhalb der use Meth
 
 \begin{figure}[t!]
 	\begin{subfigure}{\textwidth}
-		\lstinputlisting[linerange={2-16}, firstnumber=2]{terminal/testresults/prox-indir-groovy.txt}
+		\lstinputlisting[frame=none, linerange={2-16}, firstnumber=2]{terminal/testresults/prox-indir-groovy.txt}
 		\caption{Groovy Ausgabe}
 		\label{fig:proxres-indirect-groovy}
 	\end{subfigure}
 	
 	\begin{subfigure}{\textwidth}
-		\lstinputlisting[linerange={2-7}, firstnumber=2]{terminal/testresults/prox-indir-java.txt}
+		\lstinputlisting[frame=none, linerange={2-7}, firstnumber=2]{terminal/testresults/prox-indir-java.txt}
 		\caption{Java Ausgabe}
 		\label{fig:proxres-indirect-java}
 	\end{subfigure}
@@ -384,7 +384,7 @@ Um dies zu realisieren wurde die in Abbildung \ref{fig:MetaTester-expandClass} a
 
 
 \begin{figure}[hbt!]
-	\lstinputlisting[language=groovy, linerange={66-82}, firstnumber=66]{code/MetaTester.groovy}
+	\lstinputlisting[frame=none, language=groovy, linerange={66-82}, firstnumber=66]{code/MetaTester.groovy}
 	\caption{\texttt{expandClass}-Methode}
 	\label{fig:MetaTester-expandClass}
 \end{figure}
@@ -393,7 +393,7 @@ Um dies zu realisieren wurde die in Abbildung \ref{fig:MetaTester-expandClass} a
 Die \texttt{expandClass}-Methode manipuliert die \texttt{c2Expand}-Klasse. 
 Zwei Methoden kommen hierfür in Frage. 
 Die \texttt{metaclass.invokeMethod()} Methode wird erweitert, um das Verhalten von herkömmlichen nicht statischen Methoden zu verändern. 
-Die Methode \texttt{metaclass.‘static‘.invokeMethod()} wird zusätzlich für statische Methoden manipuliert, um auch hier weitere Informationen zu extrahieren. 
+Die Methode \\ \texttt{metaclass.‘static‘.invokeMethod()} wird zusätzlich für statische Methoden manipuliert, um auch hier weitere Informationen zu extrahieren. 
 Beide Varianten werden analog verwendet und erwarten als Argument ein Closure, welches die neue Logik beinhaltet. 
 Die übergebenen Closures halten zwei Variablen: \texttt{name} enthält den Namen der aufgerufenen Methode und die Liste \texttt{args} beinhaltet alle Argumente, welche beim Methodenaufruf übergeben wurden. 
 Die Parameter des Closures werden mithilfe der Zeichenkette "\texttt{->}" vom eigentlichen Körper des Closures getrennt. 
@@ -410,7 +410,7 @@ Dies ist essenziell, um die normale Funktionalität der erweiterten Klasse zu ge
 
 
 \begin{figure}[hbt!]
-	\lstinputlisting[language=groovy, linerange={84-106}, firstnumber=66]{code/MetaTester.groovy}
+	\lstinputlisting[frame=none, language=groovy, linerange={84-106}, firstnumber=66]{code/MetaTester.groovy}
 	\caption{\texttt{expandSample} Methode}
 	\label{fig:Metatester-expandSample}
 \end{figure}
@@ -424,12 +424,12 @@ Im Anschluss erfolgt eine Überprüfung der originalen Klasse und das Erstellen 
 
 \begin{figure}[hbt!]
 	\begin{subfigure}{\textwidth}
-		\lstinputlisting[linerange={9-23}, firstnumber=9]{terminal/testresults/case41.txt}
+		\lstinputlisting[frame=none, linerange={9-23}, firstnumber=9]{terminal/testresults/case41.txt}
 		\caption{Groovy Ausgabe}
 	\end{subfigure}
 	
 	\begin{subfigure}{\textwidth}
-		\lstinputlisting[linerange={9-27}, firstnumber=9]{terminal/testresults/case42.txt}
+		\lstinputlisting[frame=none, linerange={9-27}, firstnumber=9]{terminal/testresults/case42.txt}
 		\caption{Java Ausgabe}
 	\end{subfigure}
 	
@@ -452,14 +452,14 @@ Leider scheint dieses Methode keine Auswirkung auf die Java Ausgabe zu haben.
 
 %%%%%%%%%%%%%%%%%%%% Indirekte Verwendung 
 
-\begin{figure}[hbt!]
+\begin{figure}[h!]
 	\begin{subfigure}{\textwidth}
-		\lstinputlisting[firstline=9, firstnumber=9]{terminal/testresults/case51.txt}
+		\lstinputlisting[frame=none, firstline=9, firstnumber=9]{terminal/testresults/case51.txt}
 		\caption{Groovy Ausgabe}
 	\end{subfigure}
 	
 	\begin{subfigure}{\textwidth}
-		\lstinputlisting[firstline=9, firstnumber=9]{terminal/testresults/case52.txt}
+		\lstinputlisting[frame=none, firstline=9, firstnumber=9]{terminal/testresults/case52.txt}
 		\caption{Java Ausgabe}
 	\end{subfigure}
 	
@@ -498,13 +498,13 @@ Es kann also abgleitet werden, dass Metaklassen nicht vererbt werden.
 %
 %Änderung beim Verhalten der Metaklassen sind nicht rückärts wirkend.
 %Die Änderungen der Metaklasse einer Klasse sind nicht rückläufig auf bereits vorhandenen Instanzen anwendbar
-
+\pagebreak
 \subsection{Schlussfolgerung}
 
 Eine Zusammenfassung der Ergebnisse ist in Tabelle \ref{tab:meta-result} zu sehen.
 Die Behauptung das sämtliche Java-Aufrufe seitens Groovy durch den MOP-geleitet werden, ist somit nur bedingt zutreffend.
 Nur direkte Java-Aufrufe innerhalb von Grooby werden tatsächlich durch den MOP geleitet.
-Und auch hierbei sind solche Aufrufe an den Kontext des Aufrufes gebunden und nachträgliche Aufrufe außerhalb werden
+Und auch hierbei sind solche Aufrufe an den Kontext des Aufrufes gebunden und nachträgliche Aufrufe außerhalb werden ignoriert.
 
 Nach der Implementierung unseres Beispieles wurde jedoch schnell ein offensichtliches
 Problem sichtbar: Der Proxy ist für einen Einsatz innerhalb des Gradle-

@@ -63,7 +63,7 @@ Statt die unterschiedlichen Optionen bei jeder Ausführung explizit mit anzugebe
 Im Folgendem wird der Inhalt, der neu Hinzugefügten \texttt{gradle.properties} aufgelistet:
 
 \begin{figure}[hbt!]
-	\lstinputlisting[firstline=2,lastline=5]{code/generator/gradle.properties}
+	\lstinputlisting[frame=none, firstline=2,lastline=5]{code/generator/gradle.properties}
 \end{figure}
 
 In Zeile 1 wird festgelegt, dass Gradle ohne den Caching Mechanismus verwendet werden soll.
@@ -212,4 +212,4 @@ Der Fokus lag eindeutig auf der Performanten Durchführung der Kompilierungsvorg
 Außerdem wurden die Testprojekte im Ausgangszustand betrachtet. Die Möglichkeit von Gradle inkrementelle Erstellungsprozesse durchzuführen, z.B. durch die Zwischenspeicherung von Vorgängen (Caching) zur Beschleunigung dieser, treten dadurch nicht in Kraft. 
 Hinzu kommt, dass die einzelnen Testprojekte separat betrachtet wurden. Dafür wurde der Daemon abgeschaltet, um die Ergebnisse ab dem zweiten Kompilierungsvorgang nicht zu verfälschen. Das führt dazu, das zunächst bei jedem \texttt{gradle build} ein vergleichsweise hoher Initialaufwand benötigt wird. Das Einschalten des Daemons würde die Performance an dieser Stelle verbessern können.
 
-Was das Java Modulsystem betrifft, treten grundsätzlich keine Probleme auf. Abhängigkeiten wurden bei einer Modulanzahl von bis zu 3906 ohne weiteres aufgelöst. Die Module sind allerdings sehr simpel gehalten. Ein einzelnes Modul weist nur einen geringfügigen Speicherverbrauch auf. Steigt die Größe der einzelnen Module, wird auch der gesamte Speicherverbrauch im schlimmsten Fall exponentiell steigen.
+Was das Java Modulsystem betrifft, treten grundsätzlich keine Probleme auf. Abhängigkeiten wurden bei einer Modulanzahl von bis zu 3906 ohne weiteres aufgelöst. Die Module sind allerdings sehr simpel gehalten. Ein einzelnes Modul weist nur einen geringfügigen Speicherverbrauch auf. Steigt die Größe der einzelnen Module, wird auch der gesamte Speicherverbrauch im schlimmsten Fall exponentiell steigen. \pagebreak
